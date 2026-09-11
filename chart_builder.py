@@ -61,8 +61,14 @@ def build_chart(
             hover_fmt = ":.2f" + unit
         elif unit == "원":
             hover_fmt = ":,.1f원"
+        elif unit == "$/oz":
+            hover_fmt = ":$,.1f/oz"
         elif unit == "$":
-            hover_fmt = ":$,.2f"
+            hover_fmt = ":$,.2f" if (s_data.iloc[-1] < 1000 if len(s_data) > 0 else True) else ":$,.0f"
+        elif unit == "배":
+            hover_fmt = ":.2f배"
+        elif unit == "pt":
+            hover_fmt = ":,.2f pt"
         elif unit == "건":
             hover_fmt = ":,.0f건"
         else:
@@ -86,27 +92,33 @@ def build_chart(
         else:
             fig.add_trace(trace)
             
-        # 이동평균선 옵션 (show_ma == True이고 단일 축인 경우)
-        if show_ma and not is_dual and len(s_data) > 50:
+        # 이동평균선 옵션 (show_ma == True)
+        if show_ma and len(s_data) > 50:
             ma50 = s_data.rolling(50).mean()
-            ma200 = s_data.rolling(200).mean()
-            
-            fig.add_trace(go.Scatter(
+            ma_color = s_meta.get("color", "#fb923c")
+            ma50_trace = go.Scatter(
                 x=ma50.index,
                 y=ma50.values,
-                name=f"{s_meta.get('name', s_id)} (50일 이평선)",
+                name=f"{s_meta.get('name', s_id)} (50일 이평)",
                 mode="lines",
-                line=dict(color="#fb923c", width=1.2, dash="dot"),
+                line=dict(color=ma_color, width=1.2, dash="dot"),
+                opacity=0.8,
                 hovertemplate=f"50일 이평: %{{y{hover_fmt}}}<extra></extra>"
-            ))
+            )
+            if is_dual:
+                fig.add_trace(ma50_trace, secondary_y=is_secondary)
+            else:
+                fig.add_trace(ma50_trace)
             
-            if len(s_data) > 200:
+            if not is_dual and len(s_data) > 200:
+                ma200 = s_data.rolling(200).mean()
                 fig.add_trace(go.Scatter(
                     x=ma200.index,
                     y=ma200.values,
-                    name=f"{s_meta.get('name', s_id)} (200일 이평선)",
+                    name=f"{s_meta.get('name', s_id)} (200일 이평)",
                     mode="lines",
                     line=dict(color="#ec4899", width=1.4, dash="dash"),
+                    opacity=0.8,
                     hovertemplate=f"200일 이평: %{{y{hover_fmt}}}<extra></extra>"
                 ))
 
@@ -263,10 +275,16 @@ def build_chart(
     
     # 이중축 세부 레이아웃 적용
     if is_dual:
+        sec_color = "#4ade80"
+        for s_meta in series_configs:
+            if s_meta.get("axis") == "y2":
+                sec_color = s_meta.get("color", "#4ade80")
+                break
+                
         fig.update_layout(
             yaxis2=dict(
-                title=dict(text=config.get("y2_label", ""), font=dict(color="#4ade80", size=12)),
-                tickfont=dict(color="#4ade80", size=11),
+                title=dict(text=config.get("y2_label", ""), font=dict(color=sec_color, size=12)),
+                tickfont=dict(color=sec_color, size=11),
                 side="right",
                 overlaying="y",
                 showgrid=False

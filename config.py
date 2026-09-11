@@ -5,6 +5,7 @@ from pathlib import Path
 # Base Paths
 BASE_DIR = Path(__file__).resolve().parent
 API_KEY_DIR = BASE_DIR.parent / "00 API Key"
+DATA_DIR = BASE_DIR / "data"
 
 def get_api_key(service_name: str) -> str:
     """
@@ -77,8 +78,50 @@ def get_fred_api_key() -> str:
 def get_bok_api_key() -> str:
     return get_api_key("BOK")
 
+def setup_krx_credentials():
+    """
+    KRX 계정 정보(ID, PW)를 Streamlit Secrets, 환경변수, 로컬 파일, Fallback에서 로드하여 os.environ에 등록합니다.
+    """
+    krx_id, krx_pw = "", ""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets"):
+            krx_id = str(st.secrets.get("KRX_ID", "") or st.secrets.get("krx_id", "")).strip()
+            krx_pw = str(st.secrets.get("KRX_PW", "") or st.secrets.get("krx_pw", "")).strip()
+    except Exception:
+        pass
+        
+    if not krx_id:
+        krx_id = os.getenv("KRX_ID", "").strip()
+    if not krx_pw:
+        krx_pw = os.getenv("KRX_PW", "").strip()
+        
+    if (not krx_id or not krx_pw) and API_KEY_DIR.exists():
+        krx_file = API_KEY_DIR / "KRX ID&PW.txt"
+        if krx_file.exists():
+            try:
+                text = krx_file.read_text(encoding="utf-8")
+                id_m = re.search(r"ID\s*:\s*([^\r\n]+)", text)
+                pw_m = re.search(r"PW\s*:\s*([^\r\n]+)", text)
+                if id_m:
+                    krx_id = id_m.group(1).strip()
+                if pw_m:
+                    krx_pw = pw_m.group(1).strip()
+            except Exception:
+                pass
+                
+    if not krx_id:
+        krx_id = "sonoskrx"
+    if not krx_pw:
+        krx_pw = "99soKRX#1"
+        
+    os.environ["KRX_ID"] = krx_id
+    os.environ["KRX_PW"] = krx_pw
+    return krx_id, krx_pw
+
 FRED_API_KEY = get_fred_api_key()
 BOK_API_KEY = get_bok_api_key()
+setup_krx_credentials()
 
 # 1990년 1월 1일 기본 시작일 (1990년대 초 리세션 및 90년대 후반 외환위기 분석 지원)
 DEFAULT_START_DATE = "1990-01-01"
@@ -156,6 +199,44 @@ INDICATORS = {
         "show_spread_option": True,
         "spread_name": "한미 금리차 (FED - BOK)"
     },
+    "US Treasury Yield Curve (10Y, 2Y, 3M)": {
+        "category": "금리 & 수익률곡선",
+        "description": "미국 국채 장기(10년물), 중기(2년물), 단기(3개월물) 수익률 곡선을 한 화면에서 비교합니다. 단기 금리가 장기 금리를 웃도는 장단기 금리 역전 현상과 통화정책 기조를 선제적으로 모니터링합니다.",
+        "chart_type": "single_axis",
+        "series": [
+            {
+                "id": "DGS10",
+                "name": "10-Year Treasury Yield (DGS10)",
+                "source": "FRED",
+                "axis": "y1",
+                "color": "#38bdf8", # Sky Blue
+                "unit": "%",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "DGS2",
+                "name": "2-Year Treasury Yield (DGS2)",
+                "source": "FRED",
+                "axis": "y1",
+                "color": "#fbbf24", # Amber
+                "unit": "%",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "DGS3MO",
+                "name": "3-Month Treasury Yield (DGS3MO)",
+                "source": "FRED",
+                "axis": "y1",
+                "color": "#f43f5e", # Rose
+                "unit": "%",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "미국 국채 수익률 (%)"
+    },
     "T10Y-T2Y Yield Spread & S&P 500": {
         "category": "경기 선행지표",
         "description": "미국 10년물 국채와 2년물 국채의 금리 스프레드(T10Y-T2Y)와 S&P 500 지수를 대조합니다. 장단기 금리 역전(0% 이하 하회)은 역사적으로 가장 신뢰받는 경기 침체의 선행 신호입니다.",
@@ -189,10 +270,10 @@ INDICATORS = {
         "highlight_inversion": True,
         "supports_log_scale": True
     },
-    "US Dollar Index": {
+    "US Dollar Index & USD/KRW Exchange Rate": {
         "category": "통화 & 외환",
-        "description": "주요 6개국 통화 대비 미국 달러화의 가치를 나타내는 달러 인덱스(DXY)입니다. 글로벌 유동성 및 안전자산 선호 심리, 원자재 가격과 밀접하게 연동됩니다.",
-        "chart_type": "single_axis",
+        "description": "글로벌 주요 통화 대비 달러 가치를 나타내는 미국 달러 인덱스(DXY)와 원/달러 환율(USD/KRW)의 통합 비교 차트입니다. 글로벌 달러 강세 주기와 원화 가치의 역사적 동조화 및 변동성을 한눈에 분석할 수 있습니다.",
+        "chart_type": "dual_axis",
         "series": [
             {
                 "id": "DXY",
@@ -204,29 +285,21 @@ INDICATORS = {
                 "unit": "pt",
                 "line_shape": "linear",
                 "width": 2.0
-            }
-        ],
-        "y1_label": "달러 인덱스 (pt)",
-        "show_moving_averages": True
-    },
-    "USD/KRW Exchange Rate": {
-        "category": "통화 & 외환",
-        "description": "달러 대비 원화 환율(USD/KRW)의 추이입니다. 한국의 수출입 경쟁력, 외국인 자금 흐름, 국가 신용위험을 반영하는 대표적인 환율 지표입니다.",
-        "chart_type": "single_axis",
-        "series": [
+            },
             {
                 "id": "USDKRW",
                 "name": "USD/KRW 환율",
                 "source": "FRED",
                 "fred_id": "DEXKOUS",
-                "axis": "y1",
+                "axis": "y2",
                 "color": "#2dd4bf", # Teal
                 "unit": "원",
                 "line_shape": "linear",
                 "width": 2.0
             }
         ],
-        "y1_label": "원/달러 환율 (KRW)",
+        "y1_label": "달러 인덱스 (pt)",
+        "y2_label": "원/달러 환율 (KRW)",
         "show_moving_averages": True
     },
     "Crude Oil Prices: (WTI)": {
@@ -249,7 +322,60 @@ INDICATORS = {
         "y1_label": "WTI 유가 ($/배럴)",
         "show_moving_averages": True
     },
-    "Producer Price Index (PPI) Total & Core": {
+    "GOLD (GC=F) & Bitcoin (BTC-USD)": {
+        "category": "대체자산 & 유동성",
+        "description": "전통적 실물 안전자산이자 인플레이션 헤지 수단인 금(Gold 선물, GC=F)과 디지털 자산의 대표격인 비트코인(BTC-USD)의 가격 추이를 비교합니다. 글로벌 통화 완화와 유동성 공급 주기의 척도로 활용됩니다.",
+        "chart_type": "dual_axis",
+        "series": [
+            {
+                "id": "GOLD",
+                "name": "금 선물 (Gold, GC=F)",
+                "source": "YAHOO",
+                "ticker": "GC=F",
+                "axis": "y1",
+                "color": "#fbbf24", # Gold
+                "unit": "$/oz",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "BITCOIN",
+                "name": "비트코인 (Bitcoin, BTC-USD)",
+                "source": "YAHOO",
+                "ticker": "BTC-USD",
+                "axis": "y2",
+                "color": "#f97316", # Orange
+                "unit": "$",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "Gold ($/oz)",
+        "y2_label": "Bitcoin ($)",
+        "supports_log_scale": True
+    },
+    "Philadelphia Semiconductor Index (SOX)": {
+        "category": "글로벌 테크 & 경기 선행",
+        "description": "미국과 글로벌 반도체 대표 30개 기업으로 구성된 필라델피아 반도체 지수(SOX)입니다. 글로벌 IT 설비투자, 스마트폰/서버/인공지능(AI) 반도체 수요 및 경기 사이클을 선행하여 반영합니다.",
+        "chart_type": "single_axis",
+        "series": [
+            {
+                "id": "SOX",
+                "name": "필라델피아 반도체 지수 (SOX)",
+                "source": "YAHOO",
+                "ticker": "^SOX",
+                "axis": "y1",
+                "color": "#a855f7", # Purple
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "SOX 지수 (pt)",
+        "supports_log_scale": True,
+        "show_moving_averages": True
+    },
+    "Producer Price Index (PPI)": {
         "category": "물가 & 인플레이션",
         "description": "미국 생산자물가지수(PPI) 전체(Total)와 식품 및 에너지를 제외한 근원(Core) 생산자물가의 전년 동월 대비 상승률(YoY %)입니다. 소비자물가(CPI)에 선행하는 기업 제조원가 압력을 측정합니다.",
         "chart_type": "single_axis",
@@ -282,7 +408,7 @@ INDICATORS = {
         ],
         "y1_label": "생산자물가 상승률 YoY (%)"
     },
-    "Consumer Price Index (CPI) Total & Core": {
+    "Consumer Price Index (CPI)": {
         "category": "물가 & 인플레이션",
         "description": "미국 소비자물가지수(CPI) 헤드라인 전체(Total)와 변동성이 큰 식품·에너지를 제외한 근원(Core) CPI의 전년 동월 대비 상승률(YoY %)입니다. 시장 금리와 연준 통화정책에 직접적인 영향을 미칩니다.",
         "chart_type": "single_axis",
@@ -315,7 +441,7 @@ INDICATORS = {
         ],
         "y1_label": "소비자물가 상승률 YoY (%)"
     },
-    "Personal Consumption Expenditures (PCE) Total & Core": {
+    "Personal Consumption Expenditures (PCE)": {
         "category": "물가 & 인플레이션",
         "description": "미국 개인소비지출(PCE) 물가지수 전체(Total)와 근원(Core) PCE의 전년 동월 대비 상승률(YoY %)입니다. 미국 연방준비제도(FED)가 공식 물가안정 목표(2.0%)를 설정할 때 사용하는 최우선 인플레이션 지표입니다.",
         "chart_type": "single_axis",
@@ -387,5 +513,63 @@ INDICATORS = {
         ],
         "y1_label": "청구건수 (건)",
         "show_moving_averages": True
+    },
+    "KOSPI & PER": {
+        "category": "한국 증시 & 밸류에이션",
+        "description": "한국거래소(KRX)의 코스피(KOSPI) 종합주가지수와 주가수익비율(PER) 추이를 대조합니다. 기업 이익 실적 대비 한국 주식 시장의 저평가/고평가 국면과 바닥권 신호를 포착하는 핵심 지표입니다.",
+        "chart_type": "dual_axis",
+        "series": [
+            {
+                "id": "KOSPI",
+                "name": "KOSPI 지수",
+                "source": "KRX",
+                "axis": "y1",
+                "color": "#f8fafc", # White/Silver
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "PER",
+                "name": "KOSPI PER",
+                "source": "KRX",
+                "axis": "y2",
+                "color": "#ec4899", # Pink
+                "unit": "배",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "KOSPI 지수 (pt)",
+        "y2_label": "PER (배)"
+    },
+    "KOSPI & PBR": {
+        "category": "한국 증시 & 밸류에이션",
+        "description": "한국거래소(KRX)의 코스피(KOSPI) 종합주가지수와 주가순자산비율(PBR) 추이를 대조합니다. 순자산(장부가치) 대비 한국 증시의 역사적 밸류에이션 하단 및 1배(PBR 1.0x)선 지지 여부를 파악할 수 있습니다.",
+        "chart_type": "dual_axis",
+        "series": [
+            {
+                "id": "KOSPI",
+                "name": "KOSPI 지수",
+                "source": "KRX",
+                "axis": "y1",
+                "color": "#f8fafc", # White/Silver
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "PBR",
+                "name": "KOSPI PBR",
+                "source": "KRX",
+                "axis": "y2",
+                "color": "#06b6d4", # Cyan
+                "unit": "배",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "KOSPI 지수 (pt)",
+        "y2_label": "PBR (배)"
     }
 }

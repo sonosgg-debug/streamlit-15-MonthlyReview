@@ -6,7 +6,7 @@ import yfinance as yf
 from datetime import datetime
 import streamlit as st
 
-from config import get_fred_api_key, get_bok_api_key, DEFAULT_START_DATE, INDICATORS
+from config import get_fred_api_key, get_bok_api_key, DEFAULT_START_DATE, INDICATORS, BASE_DIR, DATA_DIR
 
 # FRED API Base URL
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
@@ -243,6 +243,53 @@ def fetch_ppi_core_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     combined.name = "PPI_CORE"
     return combined.sort_index()
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_krx_data(metric_name: str) -> pd.Series:
+    """
+    KOSPI 지수 및 밸류에이션(PER, PBR) 데이터를 로드합니다.
+    사전 구축된 data/krx_kospi_fundamental.csv를 기반으로 즉각적이고 안정적으로 로드합니다.
+    """
+    csv_file = DATA_DIR / "krx_kospi_fundamental.csv"
+    if not csv_file.exists():
+        csv_file = BASE_DIR / "data" / "krx_kospi_fundamental.csv"
+        
+    if csv_file.exists():
+        try:
+            df = pd.read_csv(csv_file)
+            df["Date"] = pd.to_datetime(df["Date"])
+            df = df.set_index("Date").sort_index()
+            if metric_name in df.columns:
+                s = df[metric_name].dropna()
+                s.name = metric_name
+                return s
+        except Exception as e:
+            print(f"Error reading {csv_file}: {e}")
+            
+    # pykrx fallback
+    try:
+        from pykrx import stock
+        from config import setup_krx_credentials
+        setup_krx_credentials()
+        end_str = datetime.now().strftime("%Y%m%d")
+        df_krx = stock.get_index_fundamental("20200101", end_str, "1001")
+        if not df_krx.empty:
+            df_krx = df_krx.reset_index()
+            for col in df_krx.columns:
+                if '날짜' in str(col) or 'TRD_DD' in str(col) or 'index' in str(col):
+                    df_krx = df_krx.rename(columns={col: "Date"})
+                elif '종가' in str(col):
+                    df_krx = df_krx.rename(columns={col: "KOSPI"})
+            df_krx["Date"] = pd.to_datetime(df_krx["Date"])
+            df_krx = df_krx.set_index("Date").sort_index()
+            if metric_name in df_krx.columns:
+                s = df_krx[metric_name].replace(0, np.nan).dropna()
+                s.name = metric_name
+                return s
+    except Exception as e:
+        print(f"pykrx fallback error: {e}")
+        
+    return pd.Series(dtype=float)
+
 def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
     선택된 경제 지표에 필요한 모든 시리즈를 수집하고 통합된 일별 DataFrame으로 반환합니다.
@@ -258,7 +305,9 @@ def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str
         s_id = s_meta["id"]
         source = s_meta.get("source")
         
-        if s_id == "FED_TARGET":
+        if source == "KRX" or s_id in ["KOSPI", "PER", "PBR"]:
+            s = fetch_krx_data(s_id)
+        elif s_id == "FED_TARGET":
             s = get_fed_target_rate(DEFAULT_START_DATE)
         elif s_id == "BOK_RATE":
             s = fetch_bok_base_rate(DEFAULT_START_DATE)
@@ -347,9 +396,18 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         elif unit == "원":
             val_str = f"{latest_val:,.1f}원"
             delta_str = f"{delta:+,.1f}원 ({pct_change:+.2f}%)"
+        elif unit == "$/oz":
+            val_str = f"${latest_val:,.1f}/oz"
+            delta_str = f"{delta:+,.1f}$ ({pct_change:+.2f}%)"
         elif unit == "$":
-            val_str = f"${latest_val:,.2f}"
-            delta_str = f"{delta:+,.2f}$ ({pct_change:+.2f}%)"
+            val_str = f"${latest_val:,.2f}" if latest_val < 1000 else f"${latest_val:,.0f}"
+            delta_str = f"{delta:+,.2f}$ ({pct_change:+.2f}%)" if abs(latest_val) < 1000 else f"{delta:+,.0f}$ ({pct_change:+.2f}%)"
+        elif unit == "배":
+            val_str = f"{latest_val:.2f}배"
+            delta_str = f"{delta:+.2f}배 ({pct_change:+.2f}%)"
+        elif unit == "pt":
+            val_str = f"{latest_val:,.2f} pt"
+            delta_str = f"{delta:+,.2f} pt ({pct_change:+.2f}%)"
         elif unit == "건":
             val_str = f"{int(latest_val):,}건"
             delta_str = f"{int(delta):+,}건 ({pct_change:+.2f}%)"
