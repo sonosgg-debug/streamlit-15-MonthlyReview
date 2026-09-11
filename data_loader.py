@@ -6,20 +6,21 @@ import yfinance as yf
 from datetime import datetime
 import streamlit as st
 
-from config import FRED_API_KEY, BOK_API_KEY, DEFAULT_START_DATE, INDICATORS
+from config import get_fred_api_key, get_bok_api_key, DEFAULT_START_DATE, INDICATORS
 
 # FRED API Base URL
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_fred_raw(series_id: str, start_date: str = DEFAULT_START_DATE, units: str = None) -> pd.Series:
     """
     FRED API로부터 시계열 데이터를 직접 가져옵니다. (units: pc1 등 변환 지원)
     """
-    if not FRED_API_KEY:
+    fred_key = get_fred_api_key()
+    if not fred_key:
         return pd.Series(dtype=float)
     
-    url = f"{FRED_BASE_URL}?series_id={series_id}&api_key={FRED_API_KEY}&file_type=json&observation_start={start_date}"
+    url = f"{FRED_BASE_URL}?series_id={series_id}&api_key={fred_key}&file_type=json&observation_start={start_date}"
     if units:
         url += f"&units={units}"
     try:
@@ -72,12 +73,13 @@ def get_fed_target_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     combined.name = "FED_TARGET"
     return combined.sort_index()
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_bok_base_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     """
     한국은행 ECOS API로부터 한국은행 기준금리(722Y001 / 0101000)를 가져옵니다.
     """
-    if not BOK_API_KEY:
+    bok_key = get_bok_api_key()
+    if not bok_key:
         return pd.Series(dtype=float)
         
     start_dt = pd.to_datetime(start_date)
@@ -85,7 +87,7 @@ def fetch_bok_base_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     current_month = datetime.now().strftime("%Y%m")
     
     # 722Y001: 한국은행 기준금리 및 여수신금리, 0101000: 한국은행 기준금리
-    url = f"https://ecos.bok.or.kr/api/StatisticSearch/{BOK_API_KEY}/json/kr/1/1000/722Y001/M/{start_month}/{current_month}/0101000"
+    url = f"https://ecos.bok.or.kr/api/StatisticSearch/{bok_key}/json/kr/1/1000/722Y001/M/{start_month}/{current_month}/0101000"
     
     try:
         resp = requests.get(url, timeout=12)

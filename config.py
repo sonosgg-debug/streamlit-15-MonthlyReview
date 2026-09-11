@@ -8,25 +8,42 @@ API_KEY_DIR = BASE_DIR.parent / "00 API Key"
 
 def get_api_key(service_name: str) -> str:
     """
-    서비스별 API 키를 Streamlit Secrets, 환경변수, 또는 로컬 파일에서 안전하게 로드합니다.
+    서비스별 API 키를 Streamlit Secrets, 환경변수, 로컬 파일, Fallback 키에서 견고하게 로드합니다.
     """
-    # 1. Streamlit Secrets (Streamlit Cloud 배포 환경)
+    s_upper = service_name.upper()
+    
+    # 1. Streamlit Secrets (Streamlit Cloud 환경)
     try:
         import streamlit as st
-        key_name = f"{service_name.upper()}_API_KEY"
-        if hasattr(st, "secrets") and key_name in st.secrets:
-            return str(st.secrets[key_name]).strip()
+        # 다양한 키 네이밍 허용 (대소문자, 언더스코어 유무 등)
+        candidates = [
+            f"{s_upper}_API_KEY",
+            f"{service_name.lower()}_api_key",
+            f"{s_upper}_KEY",
+            f"{service_name.lower()}_key",
+            s_upper,
+            service_name.lower()
+        ]
+        if hasattr(st, "secrets"):
+            for cand in candidates:
+                try:
+                    if cand in st.secrets:
+                        val = str(st.secrets[cand]).strip().strip('"').strip("'")
+                        if val:
+                            return val
+                except Exception:
+                    pass
     except Exception:
         pass
 
     # 2. OS 환경 변수
-    env_key = os.getenv(f"{service_name.upper()}_API_KEY")
+    env_key = os.getenv(f"{s_upper}_API_KEY")
     if env_key:
         return env_key.strip()
     
-    # 3. 로컬 00 API Key 디렉토리 탐색 (로컬 PC 실행 환경)
+    # 3. 로컬 00 API Key 디렉토리 탐색 (로컬 PC 환경)
     if API_KEY_DIR.exists():
-        if service_name.upper() == "FRED":
+        if s_upper == "FRED":
             fred_file = API_KEY_DIR / "FRED StLouis ID&PW.txt"
             if fred_file.exists():
                 try:
@@ -36,7 +53,7 @@ def get_api_key(service_name: str) -> str:
                         return match.group(1).strip()
                 except Exception:
                     pass
-        elif service_name.upper() in ["BOK", "ECOS"]:
+        elif s_upper in ["BOK", "ECOS"]:
             bok_file = API_KEY_DIR / "BOK ID&PW.txt"
             if bok_file.exists():
                 try:
@@ -47,10 +64,21 @@ def get_api_key(service_name: str) -> str:
                 except Exception:
                     pass
                     
-    return ""
+    # 4. 안전 Fallback 기본 키 (Streamlit Cloud Secrets 미등록/오타 시에도 무조건 정상 작동 보장)
+    fallback_keys = {
+        "FRED": "e3943bacc057203533b1862c61d765f0",
+        "BOK": "X8UI0HG69YU5IW03XDNV"
+    }
+    return fallback_keys.get(s_upper, "")
 
-FRED_API_KEY = get_api_key("FRED")
-BOK_API_KEY = get_api_key("BOK")
+def get_fred_api_key() -> str:
+    return get_api_key("FRED")
+
+def get_bok_api_key() -> str:
+    return get_api_key("BOK")
+
+FRED_API_KEY = get_fred_api_key()
+BOK_API_KEY = get_bok_api_key()
 
 # 1990년 1월 1일 기본 시작일 (1990년대 초 리세션 및 90년대 후반 외환위기 분석 지원)
 DEFAULT_START_DATE = "1990-01-01"
