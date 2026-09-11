@@ -143,13 +143,12 @@ with st.sidebar:
     
     indicator_options = list(INDICATORS.keys())
     
-    selected = st.radio(
+    st.radio(
         label="지표 선택",
         options=indicator_options,
-        index=indicator_options.index(st.session_state.selected_indicator) if st.session_state.selected_indicator in indicator_options else 0,
+        key="selected_indicator",
         label_visibility="collapsed"
     )
-    st.session_state.selected_indicator = selected
     
     st.markdown("<hr style='border: 0; height: 1px; background-color: #334155; margin: 20px 0;'>", unsafe_allow_html=True)
     
