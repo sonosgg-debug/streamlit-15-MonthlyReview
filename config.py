@@ -541,7 +541,10 @@ INDICATORS = {
             }
         ],
         "y1_label": "KOSPI 지수 (pt)",
-        "y2_label": "PER (배)"
+        "y2_label": "PER (배)",
+        "supports_log_scale": True,
+        "log_scale_axis": "y1",
+        "log_scale_target": "KOSPI"
     },
     "KOSPI & PBR": {
         "category": "한국 증시 & 밸류에이션",
@@ -570,6 +573,9 @@ INDICATORS = {
             }
         ],
         "y1_label": "KOSPI 지수 (pt)",
-        "y2_label": "PBR (배)"
+        "y2_label": "PBR (배)",
+        "supports_log_scale": True,
+        "log_scale_axis": "y1",
+        "log_scale_target": "KOSPI"
     }
 }

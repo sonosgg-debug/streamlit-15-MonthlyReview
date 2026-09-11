@@ -265,11 +265,11 @@ def build_chart(
     
     # 로그 스케일 처리
     if use_log_scale and config.get("supports_log_scale", False):
-        if is_dual:
-            # S&P 500이 있는 y2축을 로그 스케일로 적용
-            fig.update_layout(yaxis2_type="log")
-        else:
+        log_axis = config.get("log_scale_axis", "y2" if is_dual else "y1")
+        if log_axis == "y1":
             layout_dict["yaxis"]["type"] = "log"
+        elif log_axis == "y2":
+            fig.update_layout(yaxis2_type="log")
             
     fig.update_layout(**layout_dict)
     

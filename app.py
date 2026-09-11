@@ -255,11 +255,16 @@ with opt_col1:
 supports_log = current_config.get("supports_log_scale", False)
 with opt_col2:
     if supports_log:
-        target_name = "S&P 500"
-        if "Bitcoin" in st.session_state.selected_indicator:
-            target_name = "Bitcoin"
-        elif "SOX" in st.session_state.selected_indicator:
-            target_name = "SOX"
+        target_name = current_config.get("log_scale_target")
+        if not target_name:
+            if "Bitcoin" in st.session_state.selected_indicator:
+                target_name = "Bitcoin"
+            elif "SOX" in st.session_state.selected_indicator:
+                target_name = "SOX"
+            elif "KOSPI" in st.session_state.selected_indicator:
+                target_name = "KOSPI"
+            else:
+                target_name = "S&P 500"
         use_log = st.checkbox(f"로그 스케일 ({target_name})", value=False, help=f"{target_name} 축을 로그 스케일로 표시합니다.")
     else:
         use_log = False
