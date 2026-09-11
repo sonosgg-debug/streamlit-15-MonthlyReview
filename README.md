@@ -4,19 +4,24 @@
 
 ---
 
-## 📌 주요 제공 지표 (11종)
+## 📌 주요 제공 지표 (15종)
 
-1. **FED Target Rate & T10Y Yield & S&P 500**: 미국 연준 기준금리, 10년물 국채 금리 및 S&P 500 지수의 장기 상관관계 (이중축 지원)
+1. **FED Target Rate & T10Y Yield & S&P 500**: 미국 연준 기준금리, 10년물 국채 금리 및 S&P 500 지수의 장기 상관관계 (이중축/로그스케일)
 2. **FED Target Rate & BOK Target Rate**: 미국 연준 기준금리와 한국은행 기준금리 및 한미 금리차(스프레드) 비교
-3. **T10Y-T2Y Yield Spread & S&P 500**: 미국 10년-2년 국채 장단기 금리차 및 0% 역전 구간 하이라이트와 S&P 500 비교
-4. **US Dollar Index**: 달러 인덱스 (DXY) 추이 및 이동평균선(50/200일)
-5. **USD/KRW Exchange Rate**: 원/달러 환율 (1997~1998년 IMF 외환위기 환율 폭등 구간 완벽 복원)
-6. **Crude Oil Prices: (WTI)**: 서부 텍사스산 원유(WTI) 가격 추이 ($/bbl)
-7. **Producer Price Index (PPI) Total & Core**: 최종수요 생산자물가지수(PPI Final Demand) 및 근원(Core) 전년비(YoY %)
-8. **Consumer Price Index (CPI) Total & Core**: 소비자물가지수 헤드라인 및 근원 인플레이션 전년비(YoY %)
-9. **Personal Consumption Expenditures (PCE) Total & Core**: 연준 공식 물가안정 기준(2.0%) 헤드라인 및 근원 PCE 전년비(YoY %)
-10. **Civilian Unemployment Rate**: 미국 민간 실업률 (%)
-11. **Initial Jobless Claims**: 미국 주간 신규 실업수당 청구건수
+3. **US Treasury Yield Curve (10Y, 2Y, 3M)**: 미국 국채 10년·2년·3개월물 수익률 곡선 및 장단기 금리 비교
+4. **T10Y-T2Y Yield Spread & S&P 500**: 미국 10년-2년 국채 장단기 금리차 및 0% 역전 구간 하이라이트와 S&P 500 비교
+5. **US Dollar Index & USD/KRW Exchange Rate**: 달러 인덱스 (DXY) 및 원/달러 환율 이중축 통합 비교
+6. **Crude Oil Prices: (WTI) & S&P 500**: 서부 텍사스산 원유(WTI) 가격 추이 및 S&P 500 이중축/로그스케일 비교
+7. **GOLD (GC=F) & Bitcoin (BTC-USD)**: 금 선물 및 비트코인 이중축/로그스케일 비교
+8. **Philadelphia Semiconductor Index (SOX) & NASDAQ**: 필라델피아 반도체 지수 및 나스닥 종합지수 이중축/양축 로그스케일 비교
+9. **Producer Price Index (PPI)**: 최종수요 생산자물가지수(PPI Final Demand) 및 근원(Core) 전년비(YoY %)
+10. **Consumer Price Index (CPI)**: 소비자물가지수 헤드라인 및 근원 인플레이션 전년비(YoY %)
+11. **Personal Consumption Expenditures (PCE)**: 연준 공식 물가안정 기준(2.0%) 헤드라인 및 근원 PCE 전년비(YoY %)
+12. **Civilian Unemployment Rate**: 미국 민간 실업률 (%)
+13. **Initial Jobless Claims**: 미국 주간 신규 실업수당 청구건수
+14. **KOSPI & PER**: 한국거래소(KRX) 공식 코스피 지수 및 PER 밸류에이션 (로그스케일 지원)
+15. **KOSPI & PBR**: 한국거래소(KRX) 공식 코스피 지수 및 PBR 밸류에이션 (로그스케일 지원)
+
 
 ---
 

@@ -302,10 +302,10 @@ INDICATORS = {
         "y2_label": "원/달러 환율 (KRW)",
         "show_moving_averages": True
     },
-    "Crude Oil Prices: (WTI)": {
-        "category": "원자재 & 에너지",
-        "description": "서부 텍사스산 원유(WTI) 가격 추이입니다. 미국 에너지정보청(EIA)의 FRED 장기 현물 데이터(1990년~)와 Yahoo Finance의 최신 원유 선물(CL=F)을 스마트 결합하여 걸프전 유가 쇼크부터 최신 거래일 가격까지 단절 없이 실시간으로 분석합니다.",
-        "chart_type": "single_axis",
+    "Crude Oil Prices: (WTI) & S&P 500": {
+        "category": "원자재 & 글로벌 증시",
+        "description": "서부 텍사스산 원유(WTI) 가격 추이와 미국 대표 주가지수인 S&P 500을 결합 비교합니다. EIA/FRED 현물 데이터와 Yahoo Finance 최신 선물을 결합한 유가 변동이 기업 원가, 물가 및 주식시장 밸류에이션에 미치는 영향과 상관관계를 분석할 수 있습니다.",
+        "chart_type": "dual_axis",
         "series": [
             {
                 "id": "WTI",
@@ -316,9 +316,24 @@ INDICATORS = {
                 "unit": "$",
                 "line_shape": "linear",
                 "width": 2.0
+            },
+            {
+                "id": "SP500",
+                "name": "S&P 500",
+                "source": "YAHOO",
+                "ticker": "^GSPC",
+                "axis": "y2",
+                "color": "#4ade80", # Emerald Green
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 1.8
             }
         ],
         "y1_label": "WTI 유가 ($/배럴)",
+        "y2_label": "S&P 500 지수 (pt)",
+        "supports_log_scale": True,
+        "log_scale_axis": "y2",
+        "log_scale_target": "S&P 500",
         "show_moving_averages": True
     },
     "GOLD (GC=F) & Bitcoin (BTC-USD)": {
