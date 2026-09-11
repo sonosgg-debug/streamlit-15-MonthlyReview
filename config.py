@@ -353,10 +353,10 @@ INDICATORS = {
         "y2_label": "Bitcoin ($)",
         "supports_log_scale": True
     },
-    "Philadelphia Semiconductor Index (SOX)": {
+    "Philadelphia Semiconductor Index (SOX) & NASDAQ": {
         "category": "글로벌 테크 & 경기 선행",
-        "description": "미국과 글로벌 반도체 대표 30개 기업으로 구성된 필라델피아 반도체 지수(SOX)입니다. 글로벌 IT 설비투자, 스마트폰/서버/인공지능(AI) 반도체 수요 및 경기 사이클을 선행하여 반영합니다.",
-        "chart_type": "single_axis",
+        "description": "글로벌 반도체 대표 30개 기업으로 구성된 필라델피아 반도체 지수(SOX)와 기술주 중심의 나스닥 종합지수(NASDAQ)를 통합 비교합니다. 반도체 사이클이 나스닥 지수 및 글로벌 기술주 시장을 어떻게 선행하여 견인하는지 한눈에 분석할 수 있습니다.",
+        "chart_type": "dual_axis",
         "series": [
             {
                 "id": "SOX",
@@ -368,10 +368,24 @@ INDICATORS = {
                 "unit": "pt",
                 "line_shape": "linear",
                 "width": 2.0
+            },
+            {
+                "id": "NASDAQ",
+                "name": "나스닥 종합지수 (NASDAQ)",
+                "source": "YAHOO",
+                "ticker": "^IXIC",
+                "axis": "y2",
+                "color": "#38bdf8", # Sky Blue
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 2.0
             }
         ],
         "y1_label": "SOX 지수 (pt)",
+        "y2_label": "NASDAQ 종합지수 (pt)",
         "supports_log_scale": True,
+        "log_scale_axis": "both",
+        "log_scale_target": "SOX & NASDAQ",
         "show_moving_averages": True
     },
     "Producer Price Index (PPI)": {

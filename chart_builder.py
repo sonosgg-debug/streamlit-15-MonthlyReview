@@ -263,13 +263,11 @@ def build_chart(
         )
     )
     
-    # 로그 스케일 처리
+    # 로그 스케일 처리 (y1 축)
     if use_log_scale and config.get("supports_log_scale", False):
         log_axis = config.get("log_scale_axis", "y2" if is_dual else "y1")
-        if log_axis == "y1":
+        if log_axis in ["y1", "both"]:
             layout_dict["yaxis"]["type"] = "log"
-        elif log_axis == "y2":
-            fig.update_layout(yaxis2_type="log")
             
     fig.update_layout(**layout_dict)
     
@@ -281,14 +279,18 @@ def build_chart(
                 sec_color = s_meta.get("color", "#4ade80")
                 break
                 
-        fig.update_layout(
-            yaxis2=dict(
-                title=dict(text=config.get("y2_label", ""), font=dict(color=sec_color, size=12)),
-                tickfont=dict(color=sec_color, size=11),
-                side="right",
-                overlaying="y",
-                showgrid=False
-            )
+        y2_dict = dict(
+            title=dict(text=config.get("y2_label", ""), font=dict(color=sec_color, size=12)),
+            tickfont=dict(color=sec_color, size=11),
+            side="right",
+            overlaying="y",
+            showgrid=False
         )
+        if use_log_scale and config.get("supports_log_scale", False):
+            log_axis = config.get("log_scale_axis", "y2" if is_dual else "y1")
+            if log_axis in ["y2", "both"]:
+                y2_dict["type"] = "log"
+
+        fig.update_layout(yaxis2=y2_dict)
         
     return fig
