@@ -304,14 +304,13 @@ INDICATORS = {
     },
     "Crude Oil Prices: (WTI)": {
         "category": "원자재 & 에너지",
-        "description": "서부 텍사스산 원유(WTI) 현물 가격 추이입니다. 글로벌 에너지 비용, 공급망 물가 및 인플레이션 압력을 예측하는 대표적인 원자재 선행지표입니다.",
+        "description": "서부 텍사스산 원유(WTI) 가격 추이입니다. 미국 에너지정보청(EIA)의 FRED 장기 현물 데이터(1990년~)와 Yahoo Finance의 최신 원유 선물(CL=F)을 스마트 결합하여 걸프전 유가 쇼크부터 최신 거래일 가격까지 단절 없이 실시간으로 분석합니다.",
         "chart_type": "single_axis",
         "series": [
             {
                 "id": "WTI",
                 "name": "WTI 유가 (Crude Oil)",
-                "source": "FRED",
-                "fred_id": "DCOILWTICO",
+                "source": "FRED+YAHOO",
                 "axis": "y1",
                 "color": "#fb923c", # Orange
                 "unit": "$",

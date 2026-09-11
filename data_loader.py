@@ -197,6 +197,29 @@ def fetch_usdkrw_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     combined.name = "USDKRW"
     return combined.sort_index()
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def fetch_wti_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
+    """
+    WTI 유가 수집: 1990년부터 완벽한 일별 시계열을 제공하는 FRED DCOILWTICO(EIA 현물)를 기반으로,
+    최신 데이터는 Yahoo Finance(CL=F 원유 선물)와 스마트 결합하여
+    1990년대 걸프전 유가 쇼크부터 어제/오늘 실시간 종가까지 단절 없이 반영합니다.
+    """
+    s_fred = fetch_fred_raw("DCOILWTICO", start_date)
+    s_yahoo = fetch_yahoo_data("CL=F", start_date)
+    
+    if s_fred.empty and s_yahoo.empty:
+        return pd.Series(dtype=float)
+    if s_fred.empty:
+        combined = s_yahoo
+    elif s_yahoo.empty:
+        combined = s_fred
+    else:
+        # Yahoo Finance 최신 데이터를 우선 반영하고, 2000년 이전 데이터는 FRED로 보완
+        combined = s_yahoo.combine_first(s_fred)
+        
+    combined.name = "WTI"
+    return combined.sort_index()
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_ppi_total_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     """
@@ -313,6 +336,8 @@ def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str
             s = fetch_bok_base_rate(DEFAULT_START_DATE)
         elif s_id == "USDKRW":
             s = fetch_usdkrw_data(DEFAULT_START_DATE)
+        elif s_id == "WTI":
+            s = fetch_wti_data(DEFAULT_START_DATE)
         elif s_id == "PPI_TOTAL":
             s = fetch_ppi_total_data(DEFAULT_START_DATE)
         elif s_id == "PPI_CORE":

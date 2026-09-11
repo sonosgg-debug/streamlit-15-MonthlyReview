@@ -176,6 +176,7 @@ with st.sidebar:
         <b>데이터 출처:</b><br>
         • 미국 연준 FRED (St. Louis Fed)<br>
         • 한국은행 ECOS Open API<br>
+        • 한국거래소 KRX (Korea Exchange)<br>
         • Yahoo Finance
     </div>
     """, unsafe_allow_html=True)
