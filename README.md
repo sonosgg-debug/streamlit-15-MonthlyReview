@@ -10,7 +10,7 @@
 2. **FED Target Rate & BOK Target Rate**: 미국 연준 기준금리와 한국은행 기준금리 및 한미 금리차(스프레드) 비교
 3. **US Treasury Yield Curve (10Y, 2Y, 3M)**: 미국 국채 10년·2년·3개월물 수익률 곡선 및 장단기 금리 비교
 4. **T10Y-T2Y Yield Spread & S&P 500**: 미국 10년-2년 국채 장단기 금리차 및 0% 역전 구간 하이라이트와 S&P 500 비교
-5. **US Dollar Index & USD/KRW Exchange Rate**: 달러 인덱스 (DXY) 및 원/달러 환율 이중축 통합 비교
+5. **USD Index & USD/KRW Exchange Rate**: 달러 인덱스 (DXY) 및 원/달러 환율 이중축 통합 비교
 6. **Crude Oil Prices: (WTI) & S&P 500**: 서부 텍사스산 원유(WTI) 가격 추이 및 S&P 500 이중축/로그스케일 비교
 7. **GOLD (GC=F) & Bitcoin (BTC-USD)**: 금 선물 및 비트코인 이중축/로그스케일 비교
 8. **Philadelphia Semiconductor Index (SOX) & NASDAQ**: 필라델피아 반도체 지수 및 나스닥 종합지수 이중축/양축 로그스케일 비교

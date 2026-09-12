@@ -270,7 +270,7 @@ INDICATORS = {
         "highlight_inversion": True,
         "supports_log_scale": True
     },
-    "US Dollar Index & USD/KRW Exchange Rate": {
+    "USD Index & USD/KRW Exchange Rate": {
         "category": "통화 & 외환",
         "description": "글로벌 주요 통화 대비 달러 가치를 나타내는 미국 달러 인덱스(DXY)와 원/달러 환율(USD/KRW)의 통합 비교 차트입니다. 글로벌 달러 강세 주기와 원화 가치의 역사적 동조화 및 변동성을 한눈에 분석할 수 있습니다.",
         "chart_type": "dual_axis",
