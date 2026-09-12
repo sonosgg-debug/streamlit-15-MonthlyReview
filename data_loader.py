@@ -270,31 +270,33 @@ def fetch_ppi_core_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
 def fetch_krx_data(metric_name: str) -> pd.Series:
     """
     KOSPI 지수 및 밸류에이션(PER, PBR) 데이터를 로드합니다.
-    사전 구축된 data/krx_kospi_fundamental.csv를 기반으로 즉각적이고 안정적으로 로드합니다.
+    사전 구축된 data/krx_kospi_fundamental.csv(2002년~현재)를 기반으로 고속 로드하고,
+    최근 30일 데이터는 pykrx(한국거래소)를 통해 실시간 동기화하여 항상 최신 공식 발표치로 갱신합니다.
     """
     csv_file = DATA_DIR / "krx_kospi_fundamental.csv"
     if not csv_file.exists():
         csv_file = BASE_DIR / "data" / "krx_kospi_fundamental.csv"
         
+    s_csv = pd.Series(dtype=float)
     if csv_file.exists():
         try:
             df = pd.read_csv(csv_file)
             df["Date"] = pd.to_datetime(df["Date"])
             df = df.set_index("Date").sort_index()
             if metric_name in df.columns:
-                s = df[metric_name].dropna()
-                s.name = metric_name
-                return s
+                s_csv = df[metric_name].dropna()
+                s_csv.name = metric_name
         except Exception as e:
             print(f"Error reading {csv_file}: {e}")
-            
-    # pykrx fallback
+
+    # pykrx를 통한 최근 30일 실시간 KRX 공식 데이터 동기화
     try:
         from pykrx import stock
         from config import setup_krx_credentials
         setup_krx_credentials()
-        end_str = datetime.now().strftime("%Y%m%d")
-        df_krx = stock.get_index_fundamental("20200101", end_str, "1001")
+        start_recent = (datetime.now() - pd.Timedelta(days=30)).strftime("%Y%m%d")
+        end_recent = datetime.now().strftime("%Y%m%d")
+        df_krx = stock.get_index_fundamental(start_recent, end_recent, "1001")
         if not df_krx.empty:
             df_krx = df_krx.reset_index()
             for col in df_krx.columns:
@@ -305,11 +307,18 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
             df_krx["Date"] = pd.to_datetime(df_krx["Date"])
             df_krx = df_krx.set_index("Date").sort_index()
             if metric_name in df_krx.columns:
-                s = df_krx[metric_name].replace(0, np.nan).dropna()
-                s.name = metric_name
-                return s
+                s_recent = df_krx[metric_name].replace(0, np.nan).dropna()
+                s_recent.name = metric_name
+                if not s_csv.empty and not s_recent.empty:
+                    s_comb = s_recent.combine_first(s_csv)
+                    return s_comb.sort_index()
+                elif not s_recent.empty:
+                    return s_recent.sort_index()
     except Exception as e:
-        print(f"pykrx fallback error: {e}")
+        print(f"pykrx real-time fetch error: {e}")
+
+    if not s_csv.empty:
+        return s_csv.sort_index()
         
     return pd.Series(dtype=float)
 
