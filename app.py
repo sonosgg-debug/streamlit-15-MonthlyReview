@@ -47,13 +47,14 @@ st.markdown("""
     }
     
     /* 메인 타이틀 (00 Bookmarks 스타일) */
-    .main-title {
-        text-align: center;
-        font-size: 1.9rem;
-        font-weight: 800;
-        line-height: 1.35;
-        margin: 0 0 10px 0;
+    h1, .main h1, [data-testid="stHeadingWithActionElements"] h1, .main-title {
+        text-align: center !important;
+        font-size: 1.9rem !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
+        margin: 0 0 10px 0 !important;
         color: #8AB4F8 !important;
+        -webkit-text-fill-color: #8AB4F8 !important;
     }
     
     /* 카드 컨테이너 */
@@ -262,7 +263,7 @@ with st.sidebar:
 # 5. 오른쪽 메인 영역
 
 # A. 타이틀 영역 (00 Bookmarks 스타일 준수)
-st.markdown("<h1 class='main-title'>주요 경제 지표 Review & Preview</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title' style='text-align: center; font-size: 1.9rem !important; font-weight: 800 !important; color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important; margin: 0 0 10px 0;'><span style='color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important;'>주요 경제 지표 Review & Preview</span></h1>", unsafe_allow_html=True)
 st.markdown("<hr class='divider-line'>", unsafe_allow_html=True)
 
 # B. 차트 영역 상단: 차트 명칭 & 기간 설정
