@@ -49,7 +49,7 @@ st.markdown("""
     /* 메인 타이틀 (00 Bookmarks 스타일) */
     .main-title {
         text-align: center;
-        font-size: 1.8rem;
+        font-size: 1.9rem;
         font-weight: 800;
         line-height: 1.35;
         margin: 0 0 10px 0;
