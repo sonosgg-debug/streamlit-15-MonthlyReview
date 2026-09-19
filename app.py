@@ -91,6 +91,46 @@ st.markdown("""
         margin: 15px 0 22px 0;
     }
     
+    /* Buttons styling (45 RealEstate 테마 일치) */
+    div.stButton > button {
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s !important;
+    }
+
+    /* 사이드바 가로 버튼 간격 축소 */
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        gap: 6px !important;
+    }
+
+    /* 사이드바 버튼 높이 및 텍스트 레이아웃 (45 RealEstate 기준 일치) */
+    section[data-testid="stSidebar"] div.stButton > button {
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* 사이드바 버튼 내부 텍스트 줄바꿈 방지 및 크기 일치 */
+    section[data-testid="stSidebar"] div.stButton > button p {
+        white-space: nowrap !important;
+        overflow: visible !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: inline-block !important;
+    }
+
     /* 빠른 선택 버튼 스타일링 */
     div[data-testid="stHorizontalBlock"] button {
         border-radius: 6px;
@@ -234,12 +274,12 @@ with st.sidebar:
     # Update / 데이터 최신화 버튼
     col_up1, col_up2 = st.columns([1, 1])
     with col_up1:
-        if st.button("Update", use_container_width=True, help="최신 데이터를 다시 수집하고 캐시를 갱신합니다."):
+        if st.button("🔄 Update", use_container_width=True, help="최신 데이터를 다시 수집하고 캐시를 갱신합니다."):
             st.cache_data.clear()
             st.toast("데이터 캐시를 갱신하고 최신 데이터를 수집했습니다!", icon="✅")
             st.rerun()
     with col_up2:
-        if st.button("🔍 조회", use_container_width=True, help="선택한 조건으로 다시 조회합니다."):
+        if st.button("🔍 조회", type="primary", use_container_width=True, help="선택한 조건으로 다시 조회합니다."):
             st.rerun()
             
     st.markdown("<hr style='border: 0; height: 1px; background-color: #334155; margin: 20px 0;'>", unsafe_allow_html=True)
