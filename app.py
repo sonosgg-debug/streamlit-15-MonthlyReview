@@ -67,10 +67,16 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
     .metric-label {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
+        color: #e2e8f0;
+        margin-bottom: 2px;
+        font-weight: 700;
+    }
+    .metric-date {
+        font-size: 0.76rem;
         color: #94a3b8;
-        margin-bottom: 4px;
-        font-weight: 600;
+        margin-bottom: 6px;
+        font-weight: 500;
     }
     .metric-val {
         font-size: 1.5rem;
@@ -424,7 +430,8 @@ if not df_data.empty:
                 delta_color = "#4ade80" if ("+" in m["delta"] and "%" not in m["latest_val"]) or ("+" in m["delta"] and "환율" in m["name"]) else ("#f87171" if "-" in m["delta"] else "#94a3b8")
                 st.markdown(f"""
                 <div class="metric-card">
-                    <div class="metric-label">{m['name']} <span style='font-size:0.75rem; color:#64748b;'>({m['date']})</span></div>
+                    <div class="metric-label">{m['name']}</div>
+                    <div class="metric-date">📅 {m['date']}</div>
                     <div class="metric-val" style="color: {m['color']};">{m['latest_val']}</div>
                     <div class="metric-delta" style="color: {delta_color};">직전 변동: {m['delta']}</div>
                 </div>

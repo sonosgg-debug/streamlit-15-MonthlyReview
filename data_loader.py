@@ -50,6 +50,33 @@ def fetch_fred_raw(series_id: str, start_date: str = DEFAULT_START_DATE, units: 
         print(f"Error fetching FRED series {series_id}: {e}")
         return pd.Series(dtype=float)
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_fred_series_release_info(series_id: str) -> dict:
+    """
+    FRED API로부터 시리즈의 최신 공식 발표일(last_updated)과 최신 관측일(observation_end) 메타데이터를 조회합니다.
+    """
+    fred_key = get_fred_api_key()
+    if not fred_key:
+        return {}
+    url = f"https://api.stlouisfed.org/fred/series?series_id={series_id}&api_key={fred_key}&file_type=json"
+    try:
+        resp = requests.get(url, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            seriess = data.get("seriess", [])
+            if seriess:
+                s_info = seriess[0]
+                last_updated = s_info.get("last_updated", "")
+                obs_end = s_info.get("observation_end", "")
+                rel_date = last_updated.split(" ")[0] if last_updated else ""
+                return {
+                    "release_date": rel_date,
+                    "observation_end": obs_end
+                }
+    except Exception as e:
+        print(f"Error fetching FRED series info for {series_id}: {e}")
+    return {}
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_fed_target_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     """
@@ -411,7 +438,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             continue
             
         latest_val = series.iloc[-1]
-        latest_date = series.index[-1].strftime("%Y-%m-%d")
+        latest_dt = series.index[-1]
+        latest_date = latest_dt.strftime("%Y-%m-%d")
         
         # 전일 또는 1주/1달 전 값 비교
         if len(series) >= 2:
@@ -449,12 +477,45 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             val_str = f"{latest_val:,.2f}"
             delta_str = f"{delta:+,.2f} ({pct_change:+.2f}%)"
             
-        # 월별 지표의 경우 '2026.08월 발표치'처럼 직관적으로 표시
-        is_monthly = any(k in meta.get("name", "") for k in ["PPI", "CPI", "PCE", "실업률"])
-        if is_monthly and latest_date.endswith("-01"):
-            date_display = f"{latest_date[:7]}월 발표치"
+        # 날짜 및 공식 발표일 명확화 (데이터 대상 기간과 실제 발표일의 혼동 원천 차단)
+        name = meta.get("name", col)
+        source = meta.get("source", "")
+        fred_id = meta.get("fred_id", meta.get("id"))
+
+        # 월별 지표: PPI, CPI, PCE, 실업률, 한국은행 기준금리 또는 매월 1일 관측치
+        # (단, 미국 연준 기준금리 FED_TARGET은 일별 데이터이므로 제외)
+        is_monthly = any(k in name for k in ["PPI", "CPI", "PCE", "실업률"]) or (col == "BOK_RATE") or latest_date.endswith("-01")
+        if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU"]:
+            is_monthly = False
+        is_weekly = (col == "ICSA")
+
+        if is_monthly:
+            period_str = f"{latest_dt.year}년 {latest_dt.month}월 기준"
+            rel_date = None
+            if "FRED" in source or fred_id:
+                rel_info = get_fred_series_release_info(fred_id)
+                # 데이터의 마지막 관측일이 FRED의 최신 발표 관측일과 일치할 때만 공식 발표일 표기
+                if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+                    rel_date = rel_info["release_date"]
+            
+            if rel_date:
+                date_display = f"{period_str} (발표: {rel_date})"
+            else:
+                date_display = period_str
+        elif is_weekly:
+            period_str = f"{latest_date} 주간"
+            rel_date = None
+            if "FRED" in source or fred_id:
+                rel_info = get_fred_series_release_info(fred_id)
+                if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+                    rel_date = rel_info["release_date"]
+                    
+            if rel_date:
+                date_display = f"{period_str} (발표: {rel_date})"
+            else:
+                date_display = period_str
         else:
-            date_display = latest_date
+            date_display = f"{latest_date} 기준"
 
         metrics.append({
             "id": col,
