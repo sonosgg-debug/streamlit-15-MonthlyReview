@@ -303,7 +303,7 @@ with st.sidebar:
 # 5. 오른쪽 메인 영역
 
 # A. 타이틀 영역 (00 Bookmarks 스타일 준수)
-st.markdown("<h1 class='main-title' style='text-align: center; font-size: 1.9rem !important; font-weight: 800 !important; color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important; margin: 0 0 10px 0;'><span style='color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important;'>주요 경제 지표 Review & Preview</span></h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title' style='text-align: center; font-size: 2.0rem !important; font-weight: 800 !important; color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important; margin: 0 0 10px 0;'><span style='color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important;'>주요 경제 지표 Review & Preview</span></h1>", unsafe_allow_html=True)
 st.markdown("<hr class='divider-line'>", unsafe_allow_html=True)
 
 # B. 차트 영역 상단: 차트 명칭 & 기간 설정
