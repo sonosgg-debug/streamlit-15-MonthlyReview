@@ -30,7 +30,7 @@ st.markdown("""
     /* 메인 콘텐츠 상단 여백 조절 */
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
-        padding-top: 2.8rem !important;
+        padding-top: 2.0rem !important;
         padding-bottom: 2rem !important;
         max-width: 98% !important;
     }
@@ -49,7 +49,7 @@ st.markdown("""
     /* 메인 타이틀 (00 Bookmarks 스타일) */
     h1, .main h1, [data-testid="stHeadingWithActionElements"] h1, .main-title {
         text-align: center !important;
-        font-size: 1.9rem !important;
+        font-size: 2.0rem !important;
         font-weight: 800 !important;
         line-height: 1.35 !important;
         margin: 0 0 10px 0 !important;
@@ -444,3 +444,6 @@ if not df_data.empty:
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True, "scrollZoom": True})
 else:
     st.warning("선택한 기간에 해당하는 데이터가 없거나 수집 중 오류가 발생했습니다. 잠시 후 'Update' 버튼을 눌러주세요.")
+
+st.markdown("---")
+st.markdown("<div style='text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px; margin-bottom: 24px; line-height: 1.6;'>⚠️ 본 서비스에서 제공하는 모든 정보는 투자 참고용이며, 투자의 최종 결정과 책임은 투자자 본인에게 있습니다.</div>", unsafe_allow_html=True)
