@@ -1,3 +1,6 @@
+import socket
+socket.setdefaulttimeout(5.0)
+
 import os
 import requests
 import pandas as pd
@@ -316,7 +319,14 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
         except Exception as e:
             print(f"Error reading {csv_file}: {e}")
 
-    # pykrx를 통한 최근 30일 실시간 KRX 공식 데이터 동기화
+    # If s_csv is already up-to-date (within 1 day of today), return immediately to avoid blocking
+    if not s_csv.empty:
+        last_dt = s_csv.index[-1]
+        days_diff = (datetime.now() - last_dt).days
+        if days_diff <= 1:
+            return s_csv.sort_index()
+
+    # pykrx를 통한 최근 30일 실시간 KRX 공식 데이터 동기화 (클라우드 환경 타임아웃 및 차단 대비 방어)
     try:
         from pykrx import stock
         from config import setup_krx_credentials
@@ -324,7 +334,7 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
         start_recent = (datetime.now() - pd.Timedelta(days=30)).strftime("%Y%m%d")
         end_recent = datetime.now().strftime("%Y%m%d")
         df_krx = stock.get_index_fundamental(start_recent, end_recent, "1001")
-        if not df_krx.empty:
+        if df_krx is not None and not df_krx.empty:
             df_krx = df_krx.reset_index()
             for col in df_krx.columns:
                 if '날짜' in str(col) or 'TRD_DD' in str(col) or 'index' in str(col):
@@ -342,7 +352,7 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
                 elif not s_recent.empty:
                     return s_recent.sort_index()
     except Exception as e:
-        print(f"pykrx real-time fetch error: {e}")
+        print(f"pykrx real-time fetch error (falling back to CSV): {e}")
 
     if not s_csv.empty:
         return s_csv.sort_index()
