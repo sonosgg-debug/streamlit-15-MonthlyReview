@@ -6,10 +6,12 @@ echo ========================================================
 echo   Economic Indicators Review ^& Preview Dashboard
 echo   Starting Streamlit Application...
 echo   Local URL: http://localhost:8501
+echo   Opening browser automatically...
+echo   (Keep this window open while using the app)
 echo ========================================================
 echo.
 
-python -m streamlit run app.py
+python -m streamlit run app.py --server.headless false
 
 if %ERRORLEVEL% neq 0 (
     echo.

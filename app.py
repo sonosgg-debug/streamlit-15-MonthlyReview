@@ -10,6 +10,10 @@ from data_loader import (
     load_recession_periods
 )
 from chart_builder import build_chart
+import inspect
+
+# Streamlit 최신 표준 규격 호환 (Streamlit 1.40+ width='stretch', 구버전 use_container_width 하위 호환)
+_STRETCH_KWARG = {"width": "stretch"} if "width" in inspect.signature(st.button).parameters else {"use_container_width": True}
 
 # 1. Page Configuration
 st.set_page_config(
@@ -95,6 +99,48 @@ st.markdown("""
         height: 1px;
         background-color: #334155;
         margin: 15px 0 22px 0;
+    }
+    
+    /* 차트 영역 전체 외곽선 카드 (범례, 차트, X/Y축 눈금 일체형 테두리) */
+    div[data-testid="stElementContainer"]:has([data-testid="stPlotlyChart"]) {
+        overflow: visible !important;
+    }
+
+    [data-testid="stPlotlyChart"],
+    .stPlotlyChart {
+        background-color: #0f172a !important;
+        border: 1.5px solid #334155 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        box-sizing: content-box !important;
+        margin-top: 4px !important;
+        margin-bottom: 12px !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    
+    /* 차트 영역 내부 모든 스크롤바 완전 숨김 */
+    div[data-testid="stElementContainer"]:has([data-testid="stPlotlyChart"])::-webkit-scrollbar,
+    [data-testid="stPlotlyChart"]::-webkit-scrollbar,
+    [data-testid="stPlotlyChart"] *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    div[data-testid="stElementContainer"]:has([data-testid="stPlotlyChart"]),
+    [data-testid="stPlotlyChart"],
+    [data-testid="stPlotlyChart"] * {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    
+    /* 차트 영역 호버 시 은은한 하이라이트 효과 */
+    [data-testid="stPlotlyChart"]:hover,
+    .stPlotlyChart:hover {
+        border-color: #475569 !important;
+        box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.5), 0 0 10px rgba(56, 189, 248, 0.12) !important;
     }
     
     /* Buttons styling (45 RealEstate 테마 일치) */
@@ -325,12 +371,12 @@ with st.sidebar:
     # Update / 데이터 최신화 버튼
     col_up1, col_up2 = st.columns([1, 1])
     with col_up1:
-        if st.button("🔄 Update", use_container_width=True, help="최신 데이터를 다시 수집하고 캐시를 갱신합니다."):
+        if st.button("🔄 Update", **_STRETCH_KWARG, help="최신 데이터를 다시 수집하고 캐시를 갱신합니다."):
             st.cache_data.clear()
             st.toast("데이터 캐시를 갱신하고 최신 데이터를 수집했습니다!", icon="✅")
             st.rerun()
     with col_up2:
-        if st.button("🔍 조회", type="primary", use_container_width=True, help="선택한 조건으로 다시 조회합니다."):
+        if st.button("🔍 조회", type="primary", **_STRETCH_KWARG, help="선택한 조건으로 다시 조회합니다."):
             st.rerun()
             
     st.markdown("<hr style='border: 0; height: 1px; background-color: #334155; margin: 20px 0;'>", unsafe_allow_html=True)
@@ -369,25 +415,25 @@ with col_periods:
     
     with btn_col1:
         is_1y = (st.session_state.range_choice == "1Y")
-        if st.button("1Y", type="primary" if is_1y else "secondary", use_container_width=True):
+        if st.button("1Y", type="primary" if is_1y else "secondary", **_STRETCH_KWARG):
             set_quick_range("1Y")
             st.rerun()
             
     with btn_col2:
         is_5y = (st.session_state.range_choice == "5Y")
-        if st.button("5Y", type="primary" if is_5y else "secondary", use_container_width=True):
+        if st.button("5Y", type="primary" if is_5y else "secondary", **_STRETCH_KWARG):
             set_quick_range("5Y")
             st.rerun()
             
     with btn_col3:
         is_10y = (st.session_state.range_choice == "10Y")
-        if st.button("10Y", type="primary" if is_10y else "secondary", use_container_width=True):
+        if st.button("10Y", type="primary" if is_10y else "secondary", **_STRETCH_KWARG):
             set_quick_range("10Y")
             st.rerun()
             
     with btn_col4:
         is_max = (st.session_state.range_choice == "MAX")
-        if st.button("MAX", type="primary" if is_max else "secondary", use_container_width=True):
+        if st.button("MAX", type="primary" if is_max else "secondary", **_STRETCH_KWARG):
             set_quick_range("MAX")
             st.rerun()
             
@@ -493,7 +539,7 @@ if not df_data.empty:
         show_spread=show_spread
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True, "scrollZoom": True})
+    st.plotly_chart(fig, **_STRETCH_KWARG, config={"displayModeBar": True, "scrollZoom": True})
 else:
     st.warning("선택한 기간에 해당하는 데이터가 없거나 수집 중 오류가 발생했습니다. 잠시 후 'Update' 버튼을 눌러주세요.")
 

@@ -26,8 +26,9 @@ def build_chart(
             font=dict(size=18, color="#94a3b8")
         )
         fig.update_layout(
-            paper_bgcolor="#0f172a",
-            plot_bgcolor="#0f172a"
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="#0f172a",
+            height=460
         )
         return fig
 
@@ -210,22 +211,23 @@ def build_chart(
             fig.add_vrect(
                 x0=eff_s,
                 x1=eff_e,
-                fillcolor="rgba(226, 232, 240, 0.16)", # 밝은 실버 반투명 음영
+                fillcolor="rgba(226, 232, 240, 0.18)", # 밝은 실버 반투명 음영 (가시성 보강)
                 layer="below",
-                line_width=1,
+                line_width=1.2,
                 line_dash="dot",
-                line_color="rgba(148, 163, 184, 0.45)", # 경계선 점선 표시
+                line_color="rgba(148, 163, 184, 0.6)", # 경계선 점선 대비 강화
                 annotation_text=recession_label,
                 annotation_position="top left",
-                annotation_font=dict(size=11, color="#e2e8f0")
+                annotation_font=dict(size=11, color="#f1f5f9")
             )
 
     # 5. 레이아웃 및 다크 Slate 테마 스타일링 (00 Bookmarks 무드)
     layout_dict = dict(
-        paper_bgcolor="#0f172a",
+        height=480,
+        paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#0f172a",
         font=dict(color="#f8fafc", family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
-        margin=dict(l=60, r=60, t=40, b=40),
+        margin=dict(l=60, r=60, t=44, b=48),
         hovermode="x unified",
         hoverlabel=dict(
             bgcolor="#1e293b",
