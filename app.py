@@ -12,15 +12,15 @@ from data_loader import (
 from chart_builder import build_chart
 import inspect
 
-# Streamlit 최신 표준 규격 호환 (Streamlit 1.40+ width='stretch', 구버전 use_container_width 하위 호환)
-_STRETCH_KWARG = {"width": "stretch"} if "width" in inspect.signature(st.button).parameters else {"use_container_width": True}
-
 # 1. Page Configuration
 st.set_page_config(
     page_title="주요 경제 지표 Review & Preview",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Streamlit 최신 표준 규격 호환 (Streamlit 1.40+ width='stretch', 구버전 use_container_width 하위 호환)
+_STRETCH_KWARG = {"width": "stretch"} if "width" in inspect.signature(st.button).parameters else {"use_container_width": True}
 
 # 2. Custom CSS (00 Bookmarks 스타일 완벽 일체화)
 st.markdown("""
