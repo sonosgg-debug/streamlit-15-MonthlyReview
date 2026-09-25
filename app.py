@@ -3,8 +3,8 @@ socket.setdefaulttimeout(5.0)
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timezone, timedelta
-KST = timezone(timedelta(hours=9)), date, timedelta
+from datetime import datetime, date, timezone, timedelta
+KST = timezone(timedelta(hours=9))
 from pathlib import Path
 
 from config import INDICATORS, DEFAULT_START_DATE
