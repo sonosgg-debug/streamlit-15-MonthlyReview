@@ -31,6 +31,11 @@ st.markdown("""
         color: #f8fafc;
     }
     
+    /* Streamlit 고정 상단 헤더 배경 투명화 */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
     /* 메인 콘텐츠 상단 여백 조절 */
     .main .block-container,
     [data-testid="stMainBlockContainer"] {

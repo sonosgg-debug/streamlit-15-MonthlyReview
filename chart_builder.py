@@ -5,6 +5,20 @@ import numpy as np
 
 from config import INDICATORS
 
+STANDARD_CHART_THEME = {
+    'paper_bgcolor': '#1E293B',    # Tailwind Slate-800
+    'plot_bgcolor': '#0F172A',     # Tailwind Slate-900
+    'text_main': '#F8FAFC',        # 타이틀/헤더 텍스트
+    'text_body': '#E2E8F0',        # 본문 및 축 라벨
+    'text_muted': '#CBD5E1',       # 축 눈금 수치 텍스트
+    'grid_color': '#334155',       # 그리드 격자선
+    'border_color': '#475569',     # 축 기준선
+    'legend_bg': 'rgba(30, 41, 59, 0.85)',
+    'legend_border': '#334155',
+    'hover_bg': 'rgba(15, 23, 42, 0.9)',
+    'hover_border': '#334155'
+}
+
 def build_chart(
     df: pd.DataFrame,
     indicator_name: str,

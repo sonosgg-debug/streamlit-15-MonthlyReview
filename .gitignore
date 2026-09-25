@@ -12,6 +12,7 @@ env/
 # Environment Variables & Secrets
 .env
 .streamlit/secrets.toml
+!.streamlit/config.toml
 
 # OS Files
 .DS_Store
