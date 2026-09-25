@@ -430,7 +430,7 @@ st.markdown("<hr class='divider-line'>", unsafe_allow_html=True)
 col_title, col_periods = st.columns([1.1, 1.3], vertical_alignment="center")
 
 with col_title:
-    st.markdown(f"<div style='font-size: 1.35rem; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;'>📈 {st.session_state.selected_indicator}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size: 1.20rem; font-weight: 700; color: #8AB4F8; display: flex; align-items: center; gap: 8px;'><span>📈</span> {st.session_state.selected_indicator}</div>", unsafe_allow_html=True)
 
 with col_periods:
     # 빠른 선택 버튼 4개 (1Y, 5Y, 10Y, MAX) + 캘린더 시작일/종료일
