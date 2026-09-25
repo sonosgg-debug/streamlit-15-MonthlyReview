@@ -45,9 +45,11 @@ st.markdown("""
         border-right: 1px solid #334155 !important;
     }
     section[data-testid="stSidebar"] h1,
-    section[data-testid="stSidebar"] h2 {
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
         color: #f8fafc !important;
-        font-weight: 800 !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        font-weight: 700 !important;
     }
     
     /* 메인 타이틀 (00 Bookmarks 스타일) */
@@ -354,8 +356,20 @@ def set_quick_range(choice: str):
 
 # 4. 왼쪽 패널 (사이드바)
 with st.sidebar:
-    st.markdown("<h2 style='font-size: 1.4rem; margin-bottom: 8px;'>📌 주요 경제 지표</h2>", unsafe_allow_html=True)
-    st.markdown("<div style='font-size: 0.85rem; color: #94a3b8; margin-bottom: 18px;'>조회할 경제 지표를 선택하세요.</div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style='padding: 2px 0 12px 0;'>
+            <div style='font-size: 1.25rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px;'>
+                <span>📌</span> 주요 경제 지표
+            </div>
+            <div style='font-size: 0.82rem; color: #94a3b8; margin-top: 4px; line-height: 1.4;'>
+                조회할 글로벌 거시경제 지표 및 발표 일정을 선택하세요.
+            </div>
+        </div>
+        <hr style='border: 0; height: 1px; background-color: #334155; margin: 10px 0 16px 0;'>
+        """,
+        unsafe_allow_html=True
+    )
     
     indicator_options = list(INDICATORS.keys())
     
