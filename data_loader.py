@@ -6,7 +6,9 @@ import requests
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+KST = timezone(timedelta(hours=9))
 import streamlit as st
 
 from config import get_fred_api_key, get_bok_api_key, DEFAULT_START_DATE, INDICATORS, BASE_DIR, DATA_DIR
@@ -114,7 +116,7 @@ def fetch_bok_base_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
         
     start_dt = pd.to_datetime(start_date)
     start_month = start_dt.strftime("%Y%m")
-    current_month = datetime.now().strftime("%Y%m")
+    current_month = datetime.now(KST).strftime("%Y%m")
     
     # 722Y001: 한국은행 기준금리 및 여수신금리, 0101000: 한국은행 기준금리
     url = f"https://ecos.bok.or.kr/api/StatisticSearch/{bok_key}/json/kr/1/1000/722Y001/M/{start_month}/{current_month}/0101000"
@@ -322,7 +324,10 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
     # If s_csv is already up-to-date (within 1 day of today), return immediately to avoid blocking
     if not s_csv.empty:
         last_dt = s_csv.index[-1]
-        days_diff = (datetime.now() - last_dt).days
+        now_dt = datetime.now(KST).replace(tzinfo=None)
+        if hasattr(last_dt, 'tz_localize') and getattr(last_dt, 'tzinfo', None):
+            last_dt = last_dt.tz_localize(None)
+        days_diff = (now_dt - last_dt).days
         if days_diff <= 1:
             return s_csv.sort_index()
 
@@ -331,8 +336,9 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
         from pykrx import stock
         from config import setup_krx_credentials
         setup_krx_credentials()
-        start_recent = (datetime.now() - pd.Timedelta(days=30)).strftime("%Y%m%d")
-        end_recent = datetime.now().strftime("%Y%m%d")
+        now_kst = datetime.now(KST)
+        start_recent = (now_kst - pd.Timedelta(days=30)).strftime("%Y%m%d")
+        end_recent = now_kst.strftime("%Y%m%d")
         df_krx = stock.get_index_fundamental(start_recent, end_recent, "1001")
         if df_krx is not None and not df_krx.empty:
             df_krx = df_krx.reset_index()

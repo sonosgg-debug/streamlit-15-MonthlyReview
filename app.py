@@ -1,6 +1,10 @@
+import socket
+socket.setdefaulttimeout(5.0)
+
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date, timedelta
+from datetime import datetime, timezone, timedelta
+KST = timezone(timedelta(hours=9)), date, timedelta
 from pathlib import Path
 
 from config import INDICATORS, DEFAULT_START_DATE
@@ -331,7 +335,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 3. Session State 초기화
-today = datetime.now().date()
+today = datetime.now(KST).date()
 max_start = datetime.strptime(DEFAULT_START_DATE, "%Y-%m-%d").date()
 
 if "selected_indicator" not in st.session_state:
