@@ -61,13 +61,13 @@ st.markdown("""
         font-weight: 700 !important;
     }
     
-    /* 메인 타이틀 (00 Bookmarks 스타일) */
+    /* 메인 타이틀 (00 App_AI_Template 공통 표준) */
     h1, .main h1, [data-testid="stHeadingWithActionElements"] h1, .main-title {
         text-align: center !important;
         font-size: 2.0rem !important;
         font-weight: 800 !important;
         line-height: 1.35 !important;
-        margin: 0 0 10px 0 !important;
+        margin: 0 0 6px 0 !important;
         color: #8AB4F8 !important;
         -webkit-text-fill-color: #8AB4F8 !important;
     }
@@ -422,9 +422,14 @@ with st.sidebar:
 
 # 5. 오른쪽 메인 영역
 
-# A. 타이틀 영역 (00 Bookmarks 스타일 준수)
-st.markdown("<h1 class='main-title' style='text-align: center; font-size: 2.0rem !important; font-weight: 800 !important; color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important; margin: 0 0 10px 0;'><span style='color: #8AB4F8 !important; -webkit-text-fill-color: #8AB4F8 !important;'>주요 경제 지표 Review & Preview</span></h1>", unsafe_allow_html=True)
-st.markdown("<hr class='divider-line'>", unsafe_allow_html=True)
+# A. 타이틀 및 서브타이틀 영역 (00 App_AI_Template 공통 표준 준수)
+st.markdown("""
+<div style='text-align: center; padding-top: 1.0rem;'>
+    <h1 style='color: #8AB4F8; font-size: 2.0rem; font-weight: 800; margin-bottom: 6px;'>주요 경제 지표 Review & Preview</h1>
+    <p style='color: #94a3b8; font-size: 0.95rem; margin-bottom: 16px;'>한국과 미국 시장에 영향을 미치는 주요 경제 지표를 통해 시장의 방향성을 탐색합니다.</p>
+    <hr style='border: 0; height: 1px; background-color: #334155; margin: 16px 0 24px 0;'>
+</div>
+""", unsafe_allow_html=True)
 
 # B. 차트 영역 상단: 차트 명칭 & 기간 설정
 col_title, col_periods = st.columns([1.1, 1.3], vertical_alignment="center")
@@ -566,5 +571,10 @@ if not df_data.empty:
 else:
     st.warning("선택한 기간에 해당하는 데이터가 없거나 수집 중 오류가 발생했습니다. 잠시 후 'Update' 버튼을 눌러주세요.")
 
-st.markdown("---")
-st.markdown("<div style='text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px; margin-bottom: 24px; line-height: 1.6;'>⚠️ 본 서비스에서 제공하는 모든 정보는 투자 참고용이며, 투자의 최종 결정과 책임은 투자자 본인에게 있습니다.</div>", unsafe_allow_html=True)
+st.markdown("<hr style='border: 0; height: 1px; background-color: #334155; margin: 30px 0 10px 0;'>", unsafe_allow_html=True)
+st.markdown(
+    "<div style='text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px; margin-bottom: 24px; line-height: 1.6;'>"
+    "⚠️ 본 서비스에서 제공하는 모든 정보는 투자 참고용이며, 투자의 최종 결정과 책임은 투자자 본인에게 있습니다."
+    "</div>",
+    unsafe_allow_html=True
+)
