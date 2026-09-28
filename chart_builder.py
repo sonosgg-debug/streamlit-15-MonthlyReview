@@ -86,6 +86,8 @@ def build_chart(
             hover_fmt = ":,.2f pt"
         elif unit == "건":
             hover_fmt = ":,.0f건"
+        elif unit == "Mil. $" or unit == "$M":
+            hover_fmt = ":$,.0fM"
         else:
             hover_fmt = ":,.2f " + unit
             

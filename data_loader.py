@@ -453,6 +453,13 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         if len(series) == 0:
             continue
             
+        source = meta.get("source", "")
+        fred_id = meta.get("fred_id", meta.get("id"))
+        if source == "FRED" and fred_id and col in ["WALCL", "ICSA"]:
+            s_raw = fetch_fred_raw(fred_id, DEFAULT_START_DATE, units=meta.get("units"))
+            if not s_raw.empty:
+                series = s_raw
+
         latest_val = series.iloc[-1]
         latest_dt = series.index[-1]
         latest_date = latest_dt.strftime("%Y-%m-%d")
@@ -489,6 +496,10 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         elif unit == "건":
             val_str = f"{int(latest_val):,}건"
             delta_str = f"{int(delta):+,}건 ({pct_change:+.2f}%)"
+        elif unit == "Mil. $" or unit == "$M":
+            val_trillion = latest_val / 1_000_000
+            val_str = f"${latest_val:,.0f}M (${val_trillion:.2f}T)"
+            delta_str = f"{delta:+,.0f}M ({pct_change:+.2f}%)"
         else:
             val_str = f"{latest_val:,.2f}"
             delta_str = f"{delta:+,.2f} ({pct_change:+.2f}%)"
@@ -503,7 +514,7 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         is_monthly = any(k in name for k in ["PPI", "CPI", "PCE", "실업률"]) or (col == "BOK_RATE") or latest_date.endswith("-01")
         if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU"]:
             is_monthly = False
-        is_weekly = (col == "ICSA")
+        is_weekly = (col in ["ICSA", "WALCL"])
 
         if is_monthly:
             period_str = f"{latest_dt.year}년 {latest_dt.month}월 기준"

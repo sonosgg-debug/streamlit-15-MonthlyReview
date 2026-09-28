@@ -199,6 +199,41 @@ INDICATORS = {
         "show_spread_option": True,
         "spread_name": "한미 금리차 (FED - BOK)"
     },
+    "FED Total Assets & S&P 500": {
+        "category": "연준 유동성 & 주가",
+        "description": "미국 연방준비제도(FED)의 총자산(Total Assets, WALCL)과 S&P 500 주가지수의 추이를 함께 비교합니다. 양적완화(QE)를 통한 연준 대차대조표 확대와 유동성 공급, 그리고 양적긴축(QT)의 유동성 회수가 글로벌 주식시장에 미치는 구조적 상관관계를 분석합니다.",
+        "chart_type": "dual_axis",
+        "series": [
+            {
+                "id": "WALCL",
+                "name": "FED Total Assets (연준 총자산)",
+                "source": "FRED",
+                "fred_id": "WALCL",
+                "axis": "y1",
+                "color": "#38bdf8", # Sky Blue
+                "unit": "Mil. $",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "SP500",
+                "name": "S&P 500",
+                "source": "YAHOO",
+                "ticker": "^GSPC",
+                "axis": "y2",
+                "color": "#4ade80", # Emerald Green
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 2.0
+            }
+        ],
+        "y1_label": "FED 총자산 (Mil. $)",
+        "y2_label": "S&P 500 지수 (pt)",
+        "supports_log_scale": True,
+        "log_scale_axis": "y2",
+        "log_scale_target": "S&P 500",
+        "show_moving_averages": True
+    },
     "US Treasury Yield Curve (10Y, 2Y, 3M)": {
         "category": "금리 & 수익률곡선",
         "description": "미국 국채 장기(10년물), 중기(2년물), 단기(3개월물) 수익률 곡선을 한 화면에서 비교합니다. 단기 금리가 장기 금리를 웃도는 장단기 금리 역전 현상과 통화정책 기조를 선제적으로 모니터링합니다.",
