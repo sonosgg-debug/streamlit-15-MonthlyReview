@@ -476,7 +476,7 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         unit = meta.get("unit", "")
         # 포맷팅
         if unit == "%" or unit == "%p":
-            val_str = f"{latest_val:.2f}%"
+            val_str = f"{latest_val:.2f}%p" if unit == "%p" else f"{latest_val:.2f}%"
             delta_str = f"{delta:+.2f}%p"
         elif unit == "원":
             val_str = f"{latest_val:,.1f}원"
@@ -510,9 +510,9 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         fred_id = meta.get("fred_id", meta.get("id"))
 
         # 월별 지표: PPI, CPI, PCE, 실업률, 한국은행 기준금리 또는 매월 1일 관측치
-        # (단, 미국 연준 기준금리 FED_TARGET은 일별 데이터이므로 제외)
+        # (단, 일별 시계열 데이터는 매월 1일 관측치라도 월별 지표에서 제외)
         is_monthly = any(k in name for k in ["PPI", "CPI", "PCE", "실업률"]) or (col == "BOK_RATE") or latest_date.endswith("-01")
-        if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU"]:
+        if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU", "BAMLH0A0HYM2", "BAMLH0A1HYBB", "T10Y2Y", "DGS10", "DGS2", "DGS3MO", "WTI", "DXY", "USDKRW", "SP500", "GOLD", "BITCOIN", "SOX", "NASDAQ", "KOSPI", "PER", "PBR"]:
             is_monthly = False
         is_weekly = (col in ["ICSA", "WALCL"])
 

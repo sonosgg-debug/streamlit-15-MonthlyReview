@@ -305,6 +305,52 @@ INDICATORS = {
         "highlight_inversion": True,
         "supports_log_scale": True
     },
+    "High Yield Spread & S&P 500": {
+        "category": "신용위험 & 주가",
+        "description": "미국 하이일드 채권의 옵션조정 스프레드(전체 BAMLH0A0HYM2 및 BB등급 BAMLH0A1HYBB)와 S&P 500 지수를 비교합니다. 하이일드 스프레드는 금융시장 내 기업 신용위험(부도 위험)과 유동성 경색을 선행하여 민감하게 포착하는 대표적인 위기 선행지표입니다.",
+        "chart_type": "dual_axis",
+        "series": [
+            {
+                "id": "BAMLH0A0HYM2",
+                "name": "High Yield Spread (전체)",
+                "source": "FRED",
+                "fred_id": "BAMLH0A0HYM2",
+                "axis": "y1",
+                "color": "#f43f5e", # Rose
+                "unit": "%p",
+                "line_shape": "linear",
+                "width": 2.0
+            },
+            {
+                "id": "BAMLH0A1HYBB",
+                "name": "BB High Yield Spread (BB등급)",
+                "source": "FRED",
+                "fred_id": "BAMLH0A1HYBB",
+                "axis": "y1",
+                "color": "#fbbf24", # Amber
+                "unit": "%p",
+                "line_shape": "linear",
+                "width": 1.8
+            },
+            {
+                "id": "SP500",
+                "name": "S&P 500",
+                "source": "YAHOO",
+                "ticker": "^GSPC",
+                "axis": "y2",
+                "color": "#4ade80", # Emerald Green
+                "unit": "pt",
+                "line_shape": "linear",
+                "width": 1.8
+            }
+        ],
+        "y1_label": "하이일드 스프레드 (%p)",
+        "y2_label": "S&P 500 지수 (pt)",
+        "supports_log_scale": True,
+        "log_scale_axis": "y2",
+        "log_scale_target": "S&P 500",
+        "show_moving_averages": True
+    },
     "USD Index & USD/KRW Exchange Rate": {
         "category": "통화 & 외환",
         "description": "글로벌 주요 통화 대비 달러 가치를 나타내는 미국 달러 인덱스(DXY)와 원/달러 환율(USD/KRW)의 통합 비교 차트입니다. 글로벌 달러 강세 주기와 원화 가치의 역사적 동조화 및 변동성을 한눈에 분석할 수 있습니다.",
