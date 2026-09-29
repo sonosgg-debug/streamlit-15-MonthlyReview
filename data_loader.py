@@ -365,6 +365,39 @@ def fetch_krx_data(metric_name: str) -> pd.Series:
         
     return pd.Series(dtype=float)
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def fetch_high_yield_spread_data(series_id: str) -> pd.Series:
+    """
+    ICE BofA 하이일드 스프레드(BAMLH0A0HYM2, BAMLH0A1HYBB)의 장기 시계열을 수집합니다.
+    FRED의 최근 3년 제한 정책을 보완하기 위해:
+    1. 로컬 과거 아카이브 CSV(1996년~2023년)를 로드
+    2. FRED API로부터 최신 3년치 실시간 관측치를 수집
+    3. combine_first로 병합하여 1996년부터 현재까지 완벽한 연속성을 제공
+    """
+    archive_file = DATA_DIR / "baml_high_yield_archive.csv"
+    s_archive = pd.Series(dtype=float)
+    if archive_file.exists():
+        try:
+            df_arch = pd.read_csv(archive_file, index_col="Date", parse_dates=True)
+            if series_id in df_arch.columns:
+                s_archive = df_arch[series_id].dropna()
+        except Exception as e:
+            print(f"Error loading BAML archive for {series_id}: {e}")
+
+    # 실시간 최신 FRED API 데이터 수집
+    s_recent = fetch_fred_raw(series_id, DEFAULT_START_DATE)
+
+    if not s_recent.empty and not s_archive.empty:
+        s_combined = s_recent.combine_first(s_archive)
+        s_combined.name = series_id
+        return s_combined.sort_index()
+    elif not s_recent.empty:
+        return s_recent.sort_index()
+    elif not s_archive.empty:
+        return s_archive.sort_index()
+
+    return pd.Series(dtype=float)
+
 def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
     선택된 경제 지표에 필요한 모든 시리즈를 수집하고 통합된 일별 DataFrame으로 반환합니다.
@@ -382,6 +415,8 @@ def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str
         
         if source == "KRX" or s_id in ["KOSPI", "PER", "PBR"]:
             s = fetch_krx_data(s_id)
+        elif s_id in ["BAMLH0A0HYM2", "BAMLH0A1HYBB"]:
+            s = fetch_high_yield_spread_data(s_id)
         elif s_id == "FED_TARGET":
             s = get_fed_target_rate(DEFAULT_START_DATE)
         elif s_id == "BOK_RATE":

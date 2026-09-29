@@ -307,7 +307,7 @@ INDICATORS = {
     },
     "High Yield Spread & S&P 500": {
         "category": "신용위험 & 주가",
-        "description": "미국 하이일드 채권의 옵션조정 스프레드(전체 BAMLH0A0HYM2 및 BB등급 BAMLH0A1HYBB)와 S&P 500 지수를 비교합니다. 하이일드 스프레드는 금융시장 내 기업 신용위험(부도 위험)과 유동성 경색을 선행하여 민감하게 포착하는 대표적인 위기 선행지표입니다.",
+        "description": "미국 하이일드 채권의 옵션조정 스프레드(전체 BAMLH0A0HYM2 및 BB등급 BAMLH0A1HYBB)와 S&P 500 지수를 비교합니다. FRED의 최근 3년 제한 조치를 보완하여 1996년 12월부터 현재까지의 장기 아카이브 데이터와 최신 실시간 FRED API를 결합해 30년간의 일별 연속성을 제공합니다.",
         "chart_type": "dual_axis",
         "series": [
             {
