@@ -26,7 +26,9 @@ def build_chart(
     recession_periods: list = None,
     use_log_scale: bool = False,
     show_ma: bool = False,
-    show_spread: bool = False
+    show_spread: bool = False,
+    start_date: str = None,
+    end_date: str = None
 ) -> go.Figure:
     """
     선택된 경제 지표와 옵션에 맞추어 고품질 인터랙티브 Plotly 차트를 생성합니다.
@@ -281,6 +283,15 @@ def build_chart(
         )
     )
     
+    # 월별 지표인 경우 호버 툴팁 날짜를 'YYYY년 MM월' 형태로 직관화
+    is_monthly_indicator = any(k in indicator_name for k in ["PPI", "CPI", "PCE", "실업률", "Unemployment Rate"])
+    if is_monthly_indicator:
+        layout_dict["xaxis"]["hoverformat"] = "%Y년 %m월"
+
+    # 사용자 선택 기간으로 X축 표시 범위 명시적 설정 (단절/축 왜곡 및 미발표 구간 시각화)
+    if start_date and end_date:
+        layout_dict["xaxis"]["range"] = [start_date, end_date]
+
     # 로그 스케일 처리 (y1 축)
     if use_log_scale and config.get("supports_log_scale", False):
         log_axis = config.get("log_scale_axis", "y2" if is_dual else "y1")

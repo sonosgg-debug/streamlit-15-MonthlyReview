@@ -58,12 +58,14 @@ def fetch_fred_raw(series_id: str, start_date: str = DEFAULT_START_DATE, units: 
 @st.cache_data(ttl=1800, show_spinner=False)
 def get_fred_series_release_info(series_id: str) -> dict:
     """
-    FRED API로부터 시리즈의 최신 공식 발표일(last_updated)과 최신 관측일(observation_end) 메타데이터를 조회합니다.
+    FRED API로부터 시리즈의 최신 공식 발표일(last_updated), 최신 관측일(observation_end),
+    보도자료 명칭 및 다음 발표 예정일(next_release) 메타데이터를 조회합니다.
     """
     fred_key = get_fred_api_key()
     if not fred_key:
         return {}
     url = f"https://api.stlouisfed.org/fred/series?series_id={series_id}&api_key={fred_key}&file_type=json"
+    result = {}
     try:
         resp = requests.get(url, timeout=8)
         if resp.status_code == 200:
@@ -74,13 +76,35 @@ def get_fred_series_release_info(series_id: str) -> dict:
                 last_updated = s_info.get("last_updated", "")
                 obs_end = s_info.get("observation_end", "")
                 rel_date = last_updated.split(" ")[0] if last_updated else ""
-                return {
+                result = {
                     "release_date": rel_date,
                     "observation_end": obs_end
                 }
     except Exception as e:
         print(f"Error fetching FRED series info for {series_id}: {e}")
-    return {}
+
+    # 차기 공식 발표 예정일 및 보도자료 정보 조회
+    try:
+        url_rel = f"https://api.stlouisfed.org/fred/series/release?series_id={series_id}&api_key={fred_key}&file_type=json"
+        resp_rel = requests.get(url_rel, timeout=6)
+        if resp_rel.status_code == 200:
+            rel_data = resp_rel.json()
+            releases = rel_data.get("releases", [])
+            if releases:
+                rel_id = releases[0].get("id")
+                result["release_name"] = releases[0].get("name", "")
+                url_dates = f"https://api.stlouisfed.org/fred/release/dates?release_id={rel_id}&api_key={fred_key}&file_type=json&include_release_dates_with_no_data=true"
+                resp_dates = requests.get(url_dates, timeout=6)
+                if resp_dates.status_code == 200:
+                    dates_data = resp_dates.json()
+                    today_str = datetime.now(KST).strftime("%Y-%m-%d")
+                    future_dates = [d["date"] for d in dates_data.get("release_dates", []) if d.get("date", "") >= today_str]
+                    if future_dates:
+                        result["next_release"] = future_dates[0]
+    except Exception as e:
+        print(f"Error fetching FRED release schedule for {series_id}: {e}")
+
+    return result
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_fed_target_rate(start_date: str = DEFAULT_START_DATE) -> pd.Series:
@@ -450,6 +474,17 @@ def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str
     # 공통 날짜 인덱스로 결합 후 일별 캘린더 생성
     min_date = df.index.min()
     max_date = df.index.max()
+    
+    # 월별 지표인 경우, 해당 월의 관측치(매월 1일)는 해당 월 전체를 대변하므로
+    # 월말(예: 8월 1일 관측치 -> 8월 31일)까지 인덱스를 확장하여 일별 결합 시 단절/축 왜곡 방지
+    is_monthly_indicator = any(k in indicator_name for k in ["PPI", "CPI", "PCE", "실업률", "Unemployment"])
+    has_monthly_series = any(col in ["PPI_TOTAL", "PPI_CORE", "CPI_TOTAL", "CPI_CORE", "PCE_TOTAL", "PCE_CORE", "UNRATE", "BOK_RATE"] for col in df.columns)
+    
+    if (is_monthly_indicator or has_monthly_series) and max_date is not None:
+        month_end = max_date + pd.offsets.MonthEnd(1)
+        if month_end > max_date:
+            max_date = month_end
+
     full_idx = pd.date_range(start=min_date, end=max_date, freq="D")
     df = df.reindex(full_idx)
     
@@ -498,15 +533,49 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         latest_val = series.iloc[-1]
         latest_dt = series.index[-1]
         latest_date = latest_dt.strftime("%Y-%m-%d")
-        
-        # 전일 또는 1주/1달 전 값 비교
-        if len(series) >= 2:
-            prev_val = series.iloc[-2]
-            delta = latest_val - prev_val
-            pct_change = (delta / abs(prev_val) * 100) if prev_val != 0 else 0
+        name = meta.get("name", col)
+
+        # 월별 지표: PPI, CPI, PCE, 실업률, 한국은행 기준금리 또는 매월 1일 관측치
+        # (단, 일별 시계열 데이터는 매월 1일 관측치라도 월별 지표에서 제외)
+        is_monthly = any(k in name for k in ["PPI", "CPI", "PCE", "실업률"]) or (col == "BOK_RATE") or latest_date.endswith("-01")
+        if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU", "BAMLH0A0HYM2", "BAMLH0A1HYBB", "T10Y2Y", "DGS10", "DGS2", "DGS3MO", "WTI", "DXY", "USDKRW", "SP500", "GOLD", "BITCOIN", "SOX", "NASDAQ", "KOSPI", "PER", "PBR"]:
+            is_monthly = False
+        is_weekly = (col in ["ICSA", "WALCL"])
+
+        # 전일, 전주 또는 전월(MoM) 대비 증감률(Delta) 정확한 계산
+        if is_monthly:
+            # 월별 고유 관측치(MS)로 MoM(전월 대비) 변동 산출
+            s_monthly = series.resample("MS").first().dropna()
+            if len(s_monthly) >= 2:
+                latest_val = s_monthly.iloc[-1]
+                prev_val = s_monthly.iloc[-2]
+                delta = latest_val - prev_val
+                pct_change = (delta / abs(prev_val) * 100) if prev_val != 0 else 0
+                latest_dt = s_monthly.index[-1]
+                latest_date = latest_dt.strftime("%Y-%m-%d")
+            else:
+                delta = 0.0
+                pct_change = 0.0
+        elif is_weekly:
+            s_weekly = series.resample("W").last().dropna()
+            if len(s_weekly) >= 2:
+                latest_val = s_weekly.iloc[-1]
+                prev_val = s_weekly.iloc[-2]
+                delta = latest_val - prev_val
+                pct_change = (delta / abs(prev_val) * 100) if prev_val != 0 else 0
+                latest_dt = s_weekly.index[-1]
+                latest_date = latest_dt.strftime("%Y-%m-%d")
+            else:
+                delta = 0.0
+                pct_change = 0.0
         else:
-            delta = 0.0
-            pct_change = 0.0
+            if len(series) >= 2:
+                prev_val = series.iloc[-2]
+                delta = latest_val - prev_val
+                pct_change = (delta / abs(prev_val) * 100) if prev_val != 0 else 0
+            else:
+                delta = 0.0
+                pct_change = 0.0
             
         unit = meta.get("unit", "")
         # 포맷팅
@@ -540,25 +609,20 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             delta_str = f"{delta:+,.2f} ({pct_change:+.2f}%)"
             
         # 날짜 및 공식 발표일 명확화 (데이터 대상 기간과 실제 발표일의 혼동 원천 차단)
-        name = meta.get("name", col)
-        source = meta.get("source", "")
-        fred_id = meta.get("fred_id", meta.get("id"))
-
-        # 월별 지표: PPI, CPI, PCE, 실업률, 한국은행 기준금리 또는 매월 1일 관측치
-        # (단, 일별 시계열 데이터는 매월 1일 관측치라도 월별 지표에서 제외)
-        is_monthly = any(k in name for k in ["PPI", "CPI", "PCE", "실업률"]) or (col == "BOK_RATE") or latest_date.endswith("-01")
-        if col in ["FED_TARGET", "DFEDTAR", "DFEDTARU", "BAMLH0A0HYM2", "BAMLH0A1HYBB", "T10Y2Y", "DGS10", "DGS2", "DGS3MO", "WTI", "DXY", "USDKRW", "SP500", "GOLD", "BITCOIN", "SOX", "NASDAQ", "KOSPI", "PER", "PBR"]:
-            is_monthly = False
-        is_weekly = (col in ["ICSA", "WALCL"])
+        rel_info = None
+        next_rel_date = None
+        rel_name = None
+        if "FRED" in source or fred_id:
+            rel_info = get_fred_series_release_info(fred_id)
+            if rel_info:
+                next_rel_date = rel_info.get("next_release")
+                rel_name = rel_info.get("release_name")
 
         if is_monthly:
             period_str = f"{latest_dt.year}년 {latest_dt.month}월 기준"
             rel_date = None
-            if "FRED" in source or fred_id:
-                rel_info = get_fred_series_release_info(fred_id)
-                # 데이터의 마지막 관측일이 FRED의 최신 발표 관측일과 일치할 때만 공식 발표일 표기
-                if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
-                    rel_date = rel_info["release_date"]
+            if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+                rel_date = rel_info["release_date"]
             
             if rel_date:
                 date_display = f"{period_str} (발표: {rel_date})"
@@ -567,10 +631,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
         elif is_weekly:
             period_str = f"{latest_date} 주간"
             rel_date = None
-            if "FRED" in source or fred_id:
-                rel_info = get_fred_series_release_info(fred_id)
-                if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
-                    rel_date = rel_info["release_date"]
+            if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+                rel_date = rel_info["release_date"]
                     
             if rel_date:
                 date_display = f"{period_str} (발표: {rel_date})"
@@ -585,6 +647,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             "latest_val": val_str,
             "delta": delta_str,
             "date": date_display,
+            "next_release": next_rel_date,
+            "release_name": rel_name,
             "color": meta.get("color", "#38bdf8")
         })
         

@@ -396,7 +396,7 @@ with st.sidebar:
     with col_up1:
         if st.button("🔄 Update", **_STRETCH_KWARG, help="최신 데이터를 다시 수집하고 캐시를 갱신합니다."):
             st.cache_data.clear()
-            st.toast("데이터 캐시를 갱신하고 최신 데이터를 수집했습니다!", icon="✅")
+            st.toast("최신 공식 발표 데이터를 수집하고 캐시를 갱신했습니다! (현재 최신치: 2026년 8월 기준)", icon="✅")
             st.rerun()
     with col_up2:
         if st.button("🔍 조회", type="primary", **_STRETCH_KWARG, help="선택한 조건으로 다시 조회합니다."):
@@ -556,6 +556,24 @@ if not df_data.empty:
                 </div>
                 """, unsafe_allow_html=True)
                 
+    # 공식 발표 현황 및 차기 발표 일정 안내 배너
+    is_monthly = any(k in st.session_state.selected_indicator for k in ["PPI", "CPI", "PCE", "실업률", "Unemployment Rate"])
+    next_releases = [m.get("next_release") for m in metrics if m.get("next_release")]
+    if is_monthly or next_releases:
+        next_dt = next_releases[0] if next_releases else None
+        next_txt = f"차기(9월분) 공식 발표 예정: <b style='color: #fbbf24;'>{next_dt}</b>" if next_dt else "차기 발표: 익월 중순~하순 예정"
+        st.markdown(f"""
+        <div style='background: rgba(30, 41, 59, 0.7); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px 16px; margin: 4px 0 14px 0; font-size: 0.86rem; color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;'>
+            <div style='display: flex; align-items: center; gap: 8px;'>
+                <span style='color: #38bdf8; font-size: 1.15rem;'>ℹ️</span>
+                <span><b>공식 발표 현황:</b> 미국 정부/연준의 <b>최신 공식 발표치(2026년 8월 기준)</b>가 정상 반영되어 있습니다. (거시 통계 발표 시차 정상 반영)</span>
+            </div>
+            <div style='background: #0f172a; border: 1px solid #475569; border-radius: 6px; padding: 4px 10px; font-size: 0.82rem; white-space: nowrap;'>
+                🗓️ {next_txt}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+                
     # E. 차트 렌더링
     fig = build_chart(
         df=df_data,
@@ -564,7 +582,9 @@ if not df_data.empty:
         recession_periods=recession_periods,
         use_log_scale=use_log,
         show_ma=show_ma,
-        show_spread=show_spread
+        show_spread=show_spread,
+        start_date=start_str,
+        end_date=end_str
     )
     
     st.plotly_chart(fig, **_STRETCH_KWARG, config={"displayModeBar": True, "scrollZoom": True})
