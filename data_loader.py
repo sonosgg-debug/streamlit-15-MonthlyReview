@@ -618,8 +618,12 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
                 next_rel_date = rel_info.get("next_release")
                 rel_name = rel_info.get("release_name")
 
+        period_str = ""
+        next_month_str = ""
         if is_monthly:
             period_str = f"{latest_dt.year}년 {latest_dt.month}월 기준"
+            next_month_num = (latest_dt.month % 12) + 1
+            next_month_str = f"{next_month_num}월분"
             rel_date = None
             if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
                 rel_date = rel_info["release_date"]
@@ -630,6 +634,7 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
                 date_display = period_str
         elif is_weekly:
             period_str = f"{latest_date} 주간"
+            next_month_str = ""
             rel_date = None
             if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
                 rel_date = rel_info["release_date"]
@@ -639,6 +644,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             else:
                 date_display = period_str
         else:
+            period_str = f"{latest_date} 기준"
+            next_month_str = ""
             date_display = f"{latest_date} 기준"
 
         metrics.append({
@@ -647,6 +654,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             "latest_val": val_str,
             "delta": delta_str,
             "date": date_display,
+            "period_str": period_str,
+            "next_month_str": next_month_str,
             "next_release": next_rel_date,
             "release_name": rel_name,
             "color": meta.get("color", "#38bdf8")
