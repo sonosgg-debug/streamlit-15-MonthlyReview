@@ -17,29 +17,35 @@ except Exception:
         sys.modules["pkg_resources"] = pkg_mock
 
 import streamlit as st
-import importlib
-import pandas as pd
-from datetime import datetime, date, timezone, timedelta
-KST = timezone(timedelta(hours=9))
-from pathlib import Path
-
-from config import INDICATORS, DEFAULT_START_DATE
-import data_loader
-importlib.reload(data_loader)
-from data_loader import (
-    load_indicator_dataframe,
-    get_latest_metrics,
-    load_recession_periods
-)
-from chart_builder import build_chart
-import inspect
 
 # 1. Page Configuration
+# [가이드 05] Streamlit 명령 최우선 실행 보장 (StreamlitAPIException 및 무한 로딩 방어)
 st.set_page_config(
     page_title="주요 경제 지표 Review & Preview",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+import importlib
+import pandas as pd
+from datetime import datetime, date, timezone, timedelta
+KST = timezone(timedelta(hours=9))
+from pathlib import Path
+import inspect
+
+try:
+    from config import INDICATORS, DEFAULT_START_DATE
+    import data_loader
+    importlib.reload(data_loader)
+    from data_loader import (
+        load_indicator_dataframe,
+        get_latest_metrics,
+        load_recession_periods
+    )
+    from chart_builder import build_chart
+except Exception as e:
+    st.error(f"모듈 로드 중 오류가 발생했습니다: {e}")
+    st.stop()
 
 # Streamlit 최신 표준 규격 호환 (Streamlit 1.40+ width='stretch', 구버전 use_container_width 하위 호환)
 _STRETCH_KWARG = {"width": "stretch"} if "width" in inspect.signature(st.button).parameters else {"use_container_width": True}
