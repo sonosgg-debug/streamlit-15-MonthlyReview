@@ -439,7 +439,6 @@ with st.sidebar:
         <b>데이터 출처:</b><br>
         • 미국 연준 FRED (St. Louis Fed)<br>
         • 한국은행 ECOS Open API<br>
-        • 한국거래소 KRX (Korea Exchange)<br>
         • Yahoo Finance
     </div>
     """, unsafe_allow_html=True)
@@ -530,8 +529,6 @@ with opt_col2:
                 target_name = "Bitcoin"
             elif "SOX" in st.session_state.selected_indicator:
                 target_name = "SOX"
-            elif "KOSPI" in st.session_state.selected_indicator:
-                target_name = "KOSPI"
             else:
                 target_name = "S&P 500"
         use_log = st.checkbox(f"로그 스케일 ({target_name})", value=False, help=f"{target_name} 축을 로그 스케일로 표시합니다.")
