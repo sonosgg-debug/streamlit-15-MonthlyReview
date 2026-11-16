@@ -338,6 +338,55 @@ def fetch_ppi_core_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
     return combined.sort_index()
 
 @st.cache_data(ttl=3600, show_spinner=False)
+def fetch_cpi_total_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
+    """
+    공식 헤드라인 소비자물가지수(CPI YoY %):
+    FRED CPIAUCNS(pc1)를 기본으로 수집하며, FRED의 과거 특정 월 결측으로 인해
+    최신 관측치(2026년 10월 등)의 pc1이 결측(NaN)되는 현상을 방지하기 위해
+    raw 지수(CPIAUCNS)의 월별 시계열 기반 전년비(YoY %) 변환 데이터를 스마트 결합하여
+    1990년부터 최신 공식 발표치까지 단절 없는 완벽한 공식 시계열을 생성합니다.
+    """
+    s_pc1 = fetch_fred_raw("CPIAUCNS", start_date, units="pc1")
+    s_raw = fetch_fred_raw("CPIAUCNS", start_date)
+    
+    if s_raw.empty:
+        s = s_pc1 if not s_pc1.empty else pd.Series(dtype=float)
+    else:
+        s_raw_m = s_raw.resample("MS").first().interpolate(method="linear")
+        s_calc = s_raw_m.pct_change(12) * 100
+        if s_pc1.empty:
+            s = s_calc
+        else:
+            s = s_pc1.combine_first(s_calc)
+            
+    s.name = "CPI_TOTAL"
+    return s.dropna().sort_index()
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_cpi_core_data(start_date: str = DEFAULT_START_DATE) -> pd.Series:
+    """
+    공식 근원 소비자물가지수(Core CPI YoY %):
+    FRED CPILFENS(pc1)를 기본으로 수집하며, 결측월 보완을 위해
+    raw 지수(CPILFENS) 기반 전년비 변환치를 스마트 결합하여
+    최신 공식 발표치까지 단절 없는 완벽한 시계열을 생성합니다.
+    """
+    s_pc1 = fetch_fred_raw("CPILFENS", start_date, units="pc1")
+    s_raw = fetch_fred_raw("CPILFENS", start_date)
+    
+    if s_raw.empty:
+        s = s_pc1 if not s_pc1.empty else pd.Series(dtype=float)
+    else:
+        s_raw_m = s_raw.resample("MS").first().interpolate(method="linear")
+        s_calc = s_raw_m.pct_change(12) * 100
+        if s_pc1.empty:
+            s = s_calc
+        else:
+            s = s_pc1.combine_first(s_calc)
+            
+    s.name = "CPI_CORE"
+    return s.dropna().sort_index()
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def fetch_krx_data(metric_name: str) -> pd.Series:
     """
     KOSPI 지수 및 밸류에이션(PER, PBR) 데이터를 로드합니다.
@@ -468,6 +517,10 @@ def load_indicator_dataframe(indicator_name: str, start_date: str, end_date: str
             s = fetch_ppi_total_data(DEFAULT_START_DATE)
         elif s_id == "PPI_CORE":
             s = fetch_ppi_core_data(DEFAULT_START_DATE)
+        elif s_id == "CPI_TOTAL":
+            s = fetch_cpi_total_data(DEFAULT_START_DATE)
+        elif s_id == "CPI_CORE":
+            s = fetch_cpi_core_data(DEFAULT_START_DATE)
         elif source == "FRED":
             fred_id = s_meta.get("fred_id", s_id)
             fred_units = s_meta.get("units", None)
@@ -640,7 +693,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             next_month_num = (latest_dt.month % 12) + 1
             next_month_str = f"{next_month_num}월분"
             rel_date = None
-            if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+            obs_end = rel_info.get("observation_end", "") if rel_info else ""
+            if rel_info and rel_info.get("release_date") and (latest_date == obs_end or (obs_end and latest_date[:7] == obs_end[:7])):
                 rel_date = rel_info["release_date"]
             
             if rel_date:
@@ -651,7 +705,8 @@ def get_latest_metrics(df: pd.DataFrame, indicator_name: str):
             period_str = f"{latest_date} 주간"
             next_month_str = ""
             rel_date = None
-            if rel_info and rel_info.get("release_date") and (latest_date == rel_info.get("observation_end")):
+            obs_end = rel_info.get("observation_end", "") if rel_info else ""
+            if rel_info and rel_info.get("release_date") and (latest_date == obs_end or (obs_end and latest_date[:7] == obs_end[:7])):
                 rel_date = rel_info["release_date"]
                     
             if rel_date:
